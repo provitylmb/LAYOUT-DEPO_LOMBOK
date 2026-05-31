@@ -200,21 +200,21 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
 
 /* EXPORT STYLES (Hitam pekat) */
 #export-am,#export-as,#export-combined{display:none}
-.exp-wrap{background:#fff;font-family:Arial,sans-serif;padding:16px;width:900px;color:#000}
-.exp-title{font-size:15px;font-weight:bold;color:#000;margin-bottom:2px}
-.exp-sub{font-size:11px;color:#000;margin-bottom:3px}
-.exp-by{font-size:12px;font-weight:700;margin-bottom:8px;color:#1e4fa0}
-.exp-table{width:100%;border-collapse:collapse;font-size:11px}
-.exp-table th{background:#1e3a8a;color:#fff;padding:7px 8px;text-align:center;font-weight:700;border:1px solid #1e3070;white-space:nowrap}
-.exp-table td{padding:5px 8px;border:1px solid #94a3b8;text-align:right;white-space:nowrap;color:#000}
+.exp-wrap{background:#fff;font-family:Arial,sans-serif;padding:20px 20px 20px 20px;color:#000;display:inline-block;min-width:100%}
+.exp-title{font-size:17px;font-weight:bold;color:#000;margin-bottom:2px}
+.exp-sub{font-size:13px;color:#000;margin-bottom:3px}
+.exp-by{font-size:13px;font-weight:700;margin-bottom:10px;color:#1e4fa0}
+.exp-table{border-collapse:collapse;font-size:13px;table-layout:auto}
+.exp-table th{background:#1e3a8a;color:#fff;padding:8px 12px;text-align:center;font-weight:700;border:1px solid #1e3070;white-space:nowrap}
+.exp-table td{padding:6px 12px;border:1px solid #94a3b8;text-align:right;white-space:nowrap;color:#000}
 .exp-table td.el{text-align:left}
 .exp-table td.ec{text-align:center}
 .exp-table tr:nth-child(even) td{background:#f8faff}
 .exp-table tr.tot td{background:#e8f0fe;font-weight:bold;border-top:2px solid #1e3a8a}
-.exp-acv-h{background:#16a34a;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700}
-.exp-acv-m{background:#d97706;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700}
-.exp-acv-l{background:#dc2626;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700}
-.exp-rank{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#1e3a8a;color:#fff;font-size:10px;font-weight:700}
+.exp-acv-h{background:#16a34a;color:#fff;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:700}
+.exp-acv-m{background:#d97706;color:#fff;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:700}
+.exp-acv-l{background:#dc2626;color:#fff;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:700}
+.exp-rank{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#1e3a8a;color:#fff;font-size:11px;font-weight:700}
 
 @media(max-width:560px){
   .as-grid,.his-grid{grid-template-columns:1fr}
@@ -227,6 +227,22 @@ input[type=number]::-webkit-inner-spin-button{opacity:.4}
 <div class="app" id="root"></div>
 <div id="export-am"></div><div id="export-as"></div><div id="export-combined"></div>
 <input type="file" id="muatDataFileStatic" accept=".json" style="display:none">
+
+<!-- MODAL MUAT DATA -->
+<div id="muatModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:9999;align-items:center;justify-content:center;flex-direction:column" onclick="if(event.target===this)closeMuatModal()">
+  <div style="background:#1e2333;border:1px solid #3a4060;border-radius:14px;width:min(500px,94vw);padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <span style="font-size:14px;font-weight:600;color:#e8eaf2">📂 Muat Data</span>
+      <button onclick="closeMuatModal()" style="background:none;border:none;color:#9ba3bf;font-size:20px;cursor:pointer;line-height:1;padding:2px 6px;border-radius:4px">✕</button>
+    </div>
+    <p style="font-size:12px;color:#9ba3bf;margin-bottom:10px">Buka file <b style="color:#e8eaf2">.json</b> hasil "Kirim Data" dengan Notepad, lalu <b style="color:#e8eaf2">Ctrl+A → Ctrl+C</b>, kemudian paste di sini:</p>
+    <textarea id="muatTxt" style="width:100%;min-height:140px;padding:10px;border:1px solid #3a4060;border-radius:8px;background:#0f1117;color:#e8eaf2;font-size:11px;font-family:monospace;resize:vertical;line-height:1.5" placeholder='{"tab":"input","data":{...}}'></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
+      <button onclick="closeMuatModal()" style="padding:7px 14px;border-radius:6px;border:1px solid #3a4060;background:#252a3a;color:#9ba3bf;font-size:12px;cursor:pointer">Batal</button>
+      <button onclick="importFromText(document.getElementById('muatTxt').value)" style="padding:7px 16px;border-radius:6px;border:none;background:#4f8ef7;color:#fff;font-size:12px;font-weight:600;cursor:pointer">✅ Muat Data</button>
+    </div>
+  </div>
+</div>
 
 <div class="rekap-modal" id="rekapModal" onclick="if(event.target===this)closeRekap()">
   <div class="rekap-box">
@@ -602,7 +618,7 @@ function buildExportHTML(rows,slot,prevD,type,prevSlotLabel){
       ${data.map((r,i)=>`<tr>
         <td class="ec" style="color:#000">${i+1}.</td>
         <td class="el" style="color:#000"><b>${r.code}</b></td>
-        <td class="el" style="font-size:10px;color:#000">${r.nama}</td>
+        <td class="el" style="font-size:13px;color:#000">${r.nama}</td>
         <td style="color:#000">${fmt(r.his)}</td><td style="color:#000">${fmt(r.tgt)}</td>
         <td style="color:#000"><b>${fmtR(r.spd)}</b></td>
         <td class="ec"><span class="${expAcvCls(r.acv)}">${(r.tgt||r.his)?r.acv.toFixed(1)+'%':'-'}</span></td>
@@ -637,12 +653,15 @@ async function downloadImg(type){
   if((type==='AM'||type==='BOTH')&&dAM) combinedHTML+=buildExportHTML(dAM.rows,slot,prevDAM,'AM',prevLbl);
   if((type==='AS'||type==='BOTH')&&dAS){if(combinedHTML)combinedHTML+='<div style="height:18px"></div>';combinedHTML+=buildExportHTML(dAS.rows,slot,prevDAS,'AS',prevLbl);}
   const el=document.createElement('div');
-  el.style.cssText='position:absolute;left:-9999px;top:0;width:940px;background:#fff;';
-  el.innerHTML=`<div style="background:#fff;padding:0;font-family:Arial,sans-serif">${combinedHTML}</div>`;
+  el.style.cssText='position:absolute;left:-9999px;top:0;background:#fff;display:inline-block;';
+  el.innerHTML=`<div style="background:#fff;padding:0;font-family:Arial,sans-serif;display:inline-block">${combinedHTML}</div>`;
   document.body.appendChild(el);
   try{
-    await new Promise(r=>setTimeout(r,120));
-    const canvas=await html2canvas(el.firstChild,{backgroundColor:'#ffffff',scale:2,useCORS:true,logging:false,allowTaint:true,width:el.firstChild.scrollWidth,height:el.firstChild.scrollHeight,windowWidth:el.firstChild.scrollWidth});
+    await new Promise(r=>setTimeout(r,200));
+    const inner=el.firstChild;
+    const W=inner.scrollWidth;
+    const H=inner.scrollHeight;
+    const canvas=await html2canvas(inner,{backgroundColor:'#ffffff',scale:2,useCORS:true,logging:false,allowTaint:true,width:W,height:H,windowWidth:W});
     const link=document.createElement('a');
     const date=new Date().toLocaleDateString('id-ID').replace(/\//g,'-');
     link.download=`RealTime_${type==='BOTH'?'AM_AS':type}_${slot}_${date}.png`;
@@ -726,6 +745,31 @@ function importState(file){
     }catch(err){alert('Gagal baca file: '+err.message);}
   };
   reader.readAsText(file);
+}
+
+function importFromText(txt){
+  try{
+    const parsed=JSON.parse(txt);
+    const merged={...getInitState(),...parsed};
+    if(!merged.amTextsBySlot)merged.amTextsBySlot={};
+    if(!merged.asTextsBySlot)merged.asTextsBySlot={};
+    if(!merged.hisSPD)merged.hisSPD={};
+    if(!merged.tgtSPD)merged.tgtSPD={};
+    if(!merged.data)merged.data={};
+    S=merged;save();
+    document.getElementById('muatModal').style.display='none';
+    render();
+    alert('✅ Data berhasil dimuat!');
+  }catch(err){alert('❌ Format JSON tidak valid: '+err.message);}
+}
+
+function openMuatModal(){
+  document.getElementById('muatModal').style.display='flex';
+  document.getElementById('muatTxt').value='';
+  setTimeout(()=>document.getElementById('muatTxt').focus(),100);
+}
+function closeMuatModal(){
+  document.getElementById('muatModal').style.display='none';
 }
 
 /* ============================================================ XLSX DOWNLOAD ============================================================ */
@@ -1034,7 +1078,7 @@ function render(){
         <button class="btn btn-green btn-sm" onclick="dlXLSX('AS')"><i class="ti ti-download"></i> xlsx AS</button>
         <button class="btn btn-purple btn-sm" onclick="openRekap()"><i class="ti ti-brand-whatsapp"></i> Rekap WA</button>
         <button class="btn btn-teal btn-sm" onclick="exportState()"><i class="ti ti-share"></i> Kirim Data</button>
-        <label for="muatDataFileStatic" class="btn btn-indigo btn-sm" style="cursor:pointer"><i class="ti ti-folder-open"></i> Muat Data</label>
+        <button class="btn btn-indigo btn-sm" style="cursor:pointer" onclick="openMuatModal()"><i class="ti ti-folder-open"></i> Muat Data</button>
       </div>
     </div>
     <div class="tab-bar">
@@ -1059,4 +1103,3 @@ render();
 </script>
 </body>
 </html>
-
