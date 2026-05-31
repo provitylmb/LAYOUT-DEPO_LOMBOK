@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Realtime Sales — Depo Lombok</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.11.0/dist/tabler-icons.min.css">
+<style>
+:root{
+  --bg:#0f1117;--bg2:#181c27;--bg3:#1e2333;--bg4:#252a3a;
+  --border:#2e3448;--border2:#3a4060;
+  --text:#e8eaf2;--text2:#9ba3bf;--text3:#5a6380;
+  --blue:#4f8ef7;--blue2:#3a75e0;--blue-dim:rgba(79,142,247,.12);
+  --green:#34c77b;--green-dim:rgba(52,199,123,.12);
+  --red:#f05252;--red-dim:rgba(240,82,82,.12);
+  --amber:#f59e0b;--amber-dim:rgba(245,158,11,.12);
+  --purple:#a78bfa;--purple-dim:rgba(167,139,250,.12);
+  --teal:#2dd4bf;--teal-dim:rgba(45,212,191,.12);
+  --radius:10px;--radius-sm:6px;--radius-lg:14px;
+  --shadow:0 4px 24px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh}
+.app{padding:14px;max-width:1200px;margin:0 auto}
+
+/* HEADER */
+.header{
+  background:linear-gradient(135deg,#1a2340 0%,#0f1a35 50%,#151d35 100%);
+  border:1px solid var(--border);border-radius:var(--radius-lg);
+  padding:14px 18px;margin-bottom:12px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:10px;box-shadow:var(--shadow);
+  position:relative;overflow:hidden;
+}
+.header::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:160px;height:160px;
+  background:radial-gradient(circle,rgba(79,142,247,.15) 0%,transparent 70%);
+  border-radius:50%;
+}
+.header-left h1{font-size:16px;font-weight:700;color:#fff;letter-spacing:-.3px}
+.header-left p{font-size:11px;color:var(--text2);margin-top:3px;display:flex;align-items:center;gap:5px}
+.live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.header-right{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+
+/* TIME SELECT */
+.time-sel{
+  padding:6px 10px;border-radius:var(--radius-sm);
+  border:1px solid var(--border2);background:var(--bg3);
+  font-size:12px;font-family:'Inter',sans-serif;color:var(--text);cursor:pointer;transition:.15s;
+}
+.time-sel:focus{outline:none;border-color:var(--blue)}
+
+/* BUTTONS */
+.btn{
+  padding:6px 12px;border-radius:var(--radius-sm);border:1px solid transparent;
+  font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;
+  transition:all .15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
+}
+.btn i{font-size:13px}
+.btn-blue{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-blue:hover{background:var(--blue2);border-color:var(--blue2)}
+.btn-green{background:rgba(52,199,123,.2);color:var(--green);border-color:rgba(52,199,123,.35)}
+.btn-green:hover{background:rgba(52,199,123,.3)}
+.btn-amber{background:rgba(245,158,11,.2);color:var(--amber);border-color:rgba(245,158,11,.35)}
+.btn-amber:hover{background:rgba(245,158,11,.3)}
+.btn-purple{background:var(--purple-dim);color:var(--purple);border-color:rgba(167,139,250,.35)}
+.btn-purple:hover{background:rgba(167,139,250,.25)}
+.btn-teal{background:var(--teal-dim);color:var(--teal);border-color:rgba(45,212,191,.35)}
+.btn-teal:hover{background:rgba(45,212,191,.25)}
+.btn-indigo{background:rgba(99,102,241,.2);color:#818cf8;border-color:rgba(99,102,241,.35)}
+.btn-indigo:hover{background:rgba(99,102,241,.3)}
+.btn-ghost{background:var(--bg3);color:var(--text2);border-color:var(--border)}
+.btn-ghost:hover{background:var(--bg4);color:var(--text)}
+.btn-sm{padding:4px 9px;font-size:11px}
+.btn-sm i{font-size:12px}
+
+/* TAB BAR */
+.tab-bar{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:4px}
+.tab{padding:7px 16px;border-radius:var(--radius-sm);border:none;background:transparent;font-size:12px;font-weight:500;cursor:pointer;color:var(--text2);transition:all .15s;font-family:'Inter',sans-serif;}
+.tab.active{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(79,142,247,.3)}
+.tab:hover:not(.active){background:var(--bg3);color:var(--text)}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.2);}
+.card-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.card-title{font-size:13px;font-weight:600;color:var(--text)}
+.card-hdr .spacer{margin-left:auto}
+.card-body{padding:12px 16px}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:.3px}
+.badge-blue{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(79,142,247,.25)}
+.badge-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(52,199,123,.25)}
+.badge-amber{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,158,11,.25)}
+.badge-purple{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,.25)}
+.badge-red{background:var(--red-dim);color:var(--red);border:1px solid rgba(240,82,82,.25)}
+
+/* STAT CARDS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;padding:14px 16px}
+.stat{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;transition:.15s}
+.stat:hover{border-color:var(--border2)}
+.stat-lbl{font-size:10px;color:var(--text3);font-weight:500;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+.stat-val{font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.5px}
+.stat-sub{font-size:10px;color:var(--text3);margin-top:3px}
+
+/* TABLES */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+thead tr{background:linear-gradient(180deg,#1e2d52 0%,#182344 100%)}
+th{padding:9px 10px;text-align:center;font-weight:600;white-space:nowrap;font-size:10.5px;color:#c5d3f5;letter-spacing:.3px;border-bottom:1px solid #2a3a6e;position:sticky;top:0;}
+td{padding:8px 10px;border-bottom:1px solid rgba(46,52,72,.6);text-align:right;white-space:nowrap;color:var(--text2);font-size:11.5px}
+td.l{text-align:left}td.c{text-align:center}
+tbody tr{transition:.1s}
+tbody tr:hover td{background:rgba(79,142,247,.05);color:var(--text)}
+tbody tr:last-child td{border-bottom:none}
+tr.tot-row td{background:rgba(79,142,247,.08);color:var(--text);font-weight:600;border-top:1px solid rgba(79,142,247,.2)}
+
+/* RANK BADGE */
+.rnk{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-size:10px;font-weight:700;box-shadow:0 2px 6px rgba(79,142,247,.3);}
+.rnk-1{background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 2px 8px rgba(245,158,11,.4)}
+.rnk-2{background:linear-gradient(135deg,#94a3b8,#64748b);box-shadow:0 2px 6px rgba(148,163,184,.3)}
+.rnk-3{background:linear-gradient(135deg,#cd7c2f,#a05c1f);box-shadow:0 2px 6px rgba(205,124,47,.3)}
+
+/* ACV BADGES */
+.acv-h{background:rgba(52,199,123,.2);color:var(--green);padding:2px 6px;border-radius:4px;font-size:10.5px;font-weight:600;border:1px solid rgba(52,199,123,.3)}
+.acv-m{background:rgba(245,158,11,.2);color:var(--amber);padding:2px 6px;border-radius:4px;font-size:10.5px;font-weight:600;border:1px solid rgba(245,158,11,.3)}
+.acv-l{background:rgba(240,82,82,.2);color:var(--red);padding:2px 6px;border-radius:4px;font-size:10.5px;font-weight:600;border:1px solid rgba(240,82,82,.3)}
+.acv-n{color:var(--text3);font-size:11px}
+.g-pos{color:var(--green);font-weight:600}
+.g-neg{color:var(--red);font-weight:600}
+.du{color:var(--green);font-weight:600}
+.dd{color:var(--red);font-weight:600}
+.ds{color:var(--text3)}
+
+/* INPUTS */
+textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg3);font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text);resize:vertical;line-height:1.6;transition:.15s;}
+textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(79,142,247,.12)}
+textarea::placeholder{color:var(--text3)}
+.inp{width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg3);font-size:11px;font-family:'Inter',sans-serif;color:var(--text);transition:.15s;}
+.inp:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(79,142,247,.12)}
+input[type=number]::-webkit-inner-spin-button{opacity:.4}
+
+/* UPLOAD ZONE */
+.upload-zone{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg3);}
+.upload-zone:hover{border-color:var(--blue);background:var(--blue-dim)}
+.upload-zone .uz-icon{font-size:28px;color:var(--blue);margin-bottom:8px}
+.upload-zone p{font-size:12px;color:var(--text2);line-height:1.5}
+.upload-zone small{font-size:10px;color:var(--text3)}
+
+/* INPUT GRID */
+.as-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px}
+.as-blk{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px}
+.as-blk-t{font-size:11px;font-weight:600;margin-bottom:8px;color:var(--text2);display:flex;align-items:center;gap:6px}
+.as-blk-t::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green)}
+
+/* HIS TABLE */
+.his-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px}
+.his-blk{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px}
+.his-blk-t{font-size:11px;font-weight:600;margin-bottom:10px;color:var(--text)}
+.his-table{width:100%;border-collapse:collapse;font-size:11px}
+.his-table th{color:var(--text3);padding:6px 8px;text-align:left;font-weight:600;font-size:10px;border-bottom:1px solid var(--border);letter-spacing:.4px;text-transform:uppercase}
+.his-table td{padding:5px 7px;border-bottom:1px solid rgba(46,52,72,.4)}
+.his-table tr:last-child td{border-bottom:none}
+
+/* SLOT PILLS */
+.slot-pills{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px}
+.slot-pill{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg3);font-size:11px;font-weight:500;cursor:pointer;color:var(--text2);transition:.15s;font-family:'Inter',sans-serif;}
+.slot-pill.active{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 2px 8px rgba(79,142,247,.3)}
+.slot-pill:hover:not(.active){border-color:var(--border2);background:var(--bg4)}
+
+/* INFO BOX */
+.info-box{background:var(--blue-dim);border:1px solid rgba(79,142,247,.2);border-radius:var(--radius-sm);padding:8px 12px;font-size:11px;color:var(--text2);margin:0 16px 12px;display:flex;align-items:flex-start;gap:7px;}
+.info-box i{color:var(--blue);flex-shrink:0;margin-top:1px}
+
+/* EMPTY STATE */
+.empty-state{padding:40px 20px;text-align:center;color:var(--text3)}
+.empty-state i{font-size:36px;display:block;margin-bottom:10px;opacity:.4}
+.empty-state p{font-size:13px}
+
+/* BTN ROW */
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:0 16px 14px}
+
+/* MODAL */
+.rekap-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:9999;align-items:center;justify-content:center}
+.rekap-modal.open{display:flex}
+.rekap-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);width:min(440px,94vw);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.rekap-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.rekap-hdr span{font-size:14px;font-weight:600;color:var(--text)}
+.rekap-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3);line-height:1;padding:2px 6px;border-radius:4px;transition:.15s}
+.rekap-close:hover{background:var(--bg3);color:var(--text)}
+.rekap-body{padding:14px 18px;overflow-y:auto;flex:1}
+.rekap-txt{width:100%;min-height:220px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg3);font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--text);resize:vertical;line-height:1.8}
+.rekap-foot{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+.copy-flash{animation:cpflash .6s ease}
+@keyframes cpflash{0%{background:var(--green)}100%{background:var(--blue)}}
+
+/* EXPORT STYLES (Hitam pekat) */
+#export-am,#export-as,#export-combined{display:none}
+.exp-wrap{background:#fff;font-family:Arial,sans-serif;padding:16px;width:900px;color:#000}
+.exp-title{font-size:15px;font-weight:bold;color:#000;margin-bottom:2px}
+.exp-sub{font-size:11px;color:#000;margin-bottom:3px}
+.exp-by{font-size:12px;font-weight:700;margin-bottom:8px;color:#1e4fa0}
+.exp-table{width:100%;border-collapse:collapse;font-size:11px}
+.exp-table th{background:#1e3a8a;color:#fff;padding:7px 8px;text-align:center;font-weight:700;border:1px solid #1e3070;white-space:nowrap}
+.exp-table td{padding:5px 8px;border:1px solid #94a3b8;text-align:right;white-space:nowrap;color:#000}
+.exp-table td.el{text-align:left}
+.exp-table td.ec{text-align:center}
+.exp-table tr:nth-child(even) td{background:#f8faff}
+.exp-table tr.tot td{background:#e8f0fe;font-weight:bold;border-top:2px solid #1e3a8a}
+.exp-acv-h{background:#16a34a;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700}
+.exp-acv-m{background:#d97706;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700}
+.exp-acv-l{background:#dc2626;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700}
+.exp-rank{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:#1e3a8a;color:#fff;font-size:10px;font-weight:700}
+
+@media(max-width:560px){
+  .as-grid,.his-grid{grid-template-columns:1fr}
+  .header{padding:12px 14px}
+  .stats-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+<div class="app" id="root"></div>
+<div id="export-am"></div><div id="export-as"></div><div id="export-combined"></div>
+<input type="file" id="muatDataFileStatic" accept=".json" style="display:none">
+
+<div class="rekap-modal" id="rekapModal" onclick="if(event.target===this)closeRekap()">
+  <div class="rekap-box">
+    <div class="rekap-hdr">
+      <span>📋 Rekap WhatsApp</span>
+      <button class="rekap-close" onclick="closeRekap()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="rekap-body"><textarea class="rekap-txt" id="rekapTxt" readonly></textarea></div>
+    <div class="rekap-foot">
+      <button class="btn btn-ghost btn-sm" onclick="closeRekap()">Tutup</button>
+      <button class="btn btn-blue btn-sm" id="copyBtn" onclick="copyRekap()"><i class="ti ti-copy"></i> Copy Teks</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+/* ============================================================
+   MAPPING & CONSTANTS
+============================================================ */
+const AM_MAP={'EWO':'EWY'};
+
+const AS_MAP = {
+  'MHS': 'MHS', 'AHH': 'AMR', 'MLN': 'MJN', 'HHS': 'HAZ', 'MRI': 'MZI',
+  'LZH': 'LZH', 'ASA': 'ASA', 'ARD': 'ARD', 'PRH': 'PAR', 'NHT': 'NDA',
+  'IDI': 'IWI', 'RSK': 'RSR', 'ASN': 'ASN', 'MDM': 'DMJ', 'MYD': 'MYD',
+  'WRN': 'WRN', 'JMK': 'JMK', 'KIN': 'HAR', 'MDN': 'MDN', 'HAA': 'HEN',
+  'MSI': 'MSI', 'SAP': 'SAP', 'IMS': 'IMS', 'ARI': 'ARF', 'RDH': 'RDH',
+  'HAN': 'HAN'
+};
+
+function asMapCode(c){ return AS_MAP[c] || c; }
+
+const AS_NAMES={
+  'MHS':'M HANDRI SUSANTO','AMR':'AMIR HAMZAH','MJN':'MALJAN','HAZ':'HAMZAH HAS',
+  'MZI':'MUHAMMAD ROZI','LZH':'LL ZAKI HIDAYAT','ASA':'ANDRI SAPUTRA',
+  'ARD':'LALU ARDIAN ABDI PRATAMA','PAR':'PARHIYAH','NDA':'NUR HIDAYAT',
+  'IWI':'IDAWATI','RSR':'RIAN SABILAL KHAER','ASN':'AHMAD SUHERMAN',
+  'DMJ':'MUHAMMAD DWI MEKA','MYD':'MAHYADI','WRN':'WAHYU RAMDHAN',
+  'JMK':'JANUARDI MUBARAK','HAR':'KHAERUL IHWANUDDIN','MDN':'MAHDAN',
+  'HEN':'HENDRA ALI AKBAR','MSI':'MUSLIHIN','SAP':'SAPWAN JAYADI',
+  'IMS':'IMAM SYAFA AT','ARF':'ANDHI RINARDI FIRMANSYAH','RDH':'RAHMAD HIDAYATULLAH',
+  'HAN':'HABIEB ANTAR NUSA'
+};
+const AM_NAMES={
+  'AMI':'AMINUDIN','EWY':'EKO WALUYO','MLN':'MARLAN',
+  'IRN':'IRWANTO','TSA':'TABAH SUWASANA','MYA':'MULYANA'
+};
+
+const TIME_SLOTS=['10','13','16','19','22'];
+const SLOT_LBL={'10':'Jam 10.00','13':'Jam 13.00','16':'Jam 16.00','19':'Jam 19.00','22':'Jam 22.00'};
+function curSlot(){const h=new Date().getHours();if(h<13)return'10';if(h<16)return'13';if(h<19)return'16';if(h<22)return'19';return'22';}
+
+/* ============================================================ PARSER ============================================================ */
+function parseDryAM(txt){
+  if(!txt||!txt.trim())return[];
+  const lines=txt.split('\n').map(l=>l.trim()).filter(Boolean);
+  let inDry=false;const rows=[];
+  for(const l of lines){
+    if(l.includes('Jenis Produk: Dry')){inDry=true;continue;}
+    if(inDry&&(l.startsWith('===')||l.startsWith('AM ')))continue;
+    if(inDry&&l.startsWith('Jenis Produk:')&&!l.includes('Dry'))break;
+    if(inDry){
+      const p=l.split('|').map(s=>s.trim());
+      if(p.length>=2){const c=p[0],spd=parseInt(p[1].replace(/,/g,''))||0;
+        if(c&&spd>0){const mc=AM_MAP[c]||c;rows.push({code:mc,origCode:c,spd,std:parseInt((p[2]||'').replace(/,/g,''))||0,apc:parseInt((p[3]||'').replace(/,/g,''))||0,margin:parseFloat(p[4])||0});}}
+    }
+  }
+  return rows;
+}
+
+function parseDryAS(txt){
+  if(!txt||!txt.trim())return[];
+  const lines=txt.split('\n').map(l=>l.trim()).filter(Boolean);
+  let inDry=false;const rows=[];
+  for(const l of lines){
+    if(l.includes('Jenis Produk: Dry')){inDry=true;continue;}
+    if(inDry&&(l.startsWith('===')||l.startsWith('AS ')))continue;
+    if(inDry&&l.startsWith('Jenis Produk:')&&!l.includes('Dry'))break;
+    if(inDry){
+      const p=l.split('|').map(s=>s.trim());
+      if(p.length>=2){const c=p[0],spd=parseInt(p[1].replace(/,/g,''))||0;
+        if(c&&spd>0){const mc=asMapCode(c);rows.push({code:mc,origCode:c,spd,std:parseInt((p[2]||'').replace(/,/g,''))||0,apc:parseInt((p[3]||'').replace(/,/g,''))||0,margin:parseFloat(p[4])||0});}}
+    }
+  }
+  return rows;
+}
+
+/* ============================================================ STATE ============================================================ */
+function getInitState(){
+  return{tab:'input',amText:'',asTexts:Array(6).fill(''),amTextsBySlot:{},asTextsBySlot:{},
+    manualSlot:null,inputSlot:'10',data:{},hisSPD:{},tgtSPD:{},namaAM:{},namaAS:{},
+    totHis:{},totTgt:{},totHisAM:{},totTgtAM:{},totHisAS:{},totTgtAS:{}};
+}
+let S=(()=>{
+  try{
+    const s=JSON.parse(localStorage.getItem('rts_v4')||'null');
+    if(s){
+      const m={...getInitState(),...s};
+      if(!m.amTextsBySlot)m.amTextsBySlot={};
+      if(!m.asTextsBySlot)m.asTextsBySlot={};
+      if(m.amText&&!m.amTextsBySlot['10'])m.amTextsBySlot['10']=m.amText;
+      if(m.asTexts&&m.asTexts.some(Boolean)&&(!m.asTextsBySlot['10']||!m.asTextsBySlot['10'].some(Boolean)))
+        m.asTextsBySlot['10']=[...m.asTexts];
+      return m;
+    }
+    return getInitState();
+  }catch(e){return getInitState();}
+})();
+function save(){try{localStorage.setItem('rts_v4',JSON.stringify(S));}catch(e){}}
+
+/* ============================================================ HELPERS ============================================================ */
+function fmt(n){return n?parseInt(n).toLocaleString('id-ID'):'-';}
+function fmtR(n){return Math.round(n).toLocaleString('id-ID');}
+function pct(n){return(n>0?'+':'')+n.toFixed(1)+'%';}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function acvCls(v){if(!v)return'acv-n';if(v>=100)return'acv-h';if(v>=90)return'acv-m';return'acv-l';}
+function expAcvCls(v){if(!v)return'';if(v>=100)return'exp-acv-h';if(v>=90)return'exp-acv-m';return'exp-acv-l';}
+function rnkCls(r){if(r===1)return'rnk rnk-1';if(r===2)return'rnk rnk-2';if(r===3)return'rnk rnk-3';return'rnk';}
+
+/* ============================================================ PROCESS ============================================================ */
+function processAM(){
+  const slot=S.inputSlot||'10';
+  const txt=(S.amTextsBySlot&&S.amTextsBySlot[slot])||S.amText||'';
+  const rows=parseDryAM(txt);
+  if(!rows.length){alert('Data AM tidak ditemukan. Pastikan format benar.');return;}
+  rows.sort((a,b)=>b.spd-a.spd);rows.forEach((r,i)=>r.rank=i+1);
+  S.data['AM_'+slot]={rows,slot,ts:Date.now()};
+  save();S.tab='am';S.manualSlot=slot;render();
+}
+
+function processAS(){
+  const slot=S.inputSlot||'10';
+  const texts=(S.asTextsBySlot&&S.asTextsBySlot[slot])||S.asTexts||[];
+  const all=[];
+  for(let i=0;i<6;i++){if(texts[i])all.push(...parseDryAS(texts[i]));}
+  if(!all.length){alert('Data AS tidak ditemukan. Pastikan format benar.');return;}
+  all.sort((a,b)=>b.spd-a.spd);all.forEach((r,i)=>r.rank=i+1);
+  S.data['AS_'+slot]={rows:all,slot,ts:Date.now()};
+  save();S.tab='as';S.manualSlot=slot;render();
+}
+
+function getPrevSlot(slot){const i=TIME_SLOTS.indexOf(slot);return i>0?TIME_SLOTS[i-1]:null;}
+
+function buildTableRows(rows,slot,prevD,type){
+  return rows.map(r=>{
+    const his=S.hisSPD[r.code]||0;
+    const tgt=S.tgtSPD[r.code]||0;
+    const acv=tgt?(r.spd/tgt*100):(his?(r.spd/his*100):0); // ACV vs TGT, fallback ke HIS jika TGT kosong
+    const growth=his?((r.spd-his)/his*100):0;
+    const nama=type==='AM'
+      ?(AM_NAMES[r.code]||S.namaAM[r.code]||'')
+      :(AS_NAMES[r.code]||AS_NAMES[r.origCode]||S.namaAS[r.code]||'');
+    return{...r,his,tgt,acv,growth,nama};
+  });
+}
+
+function getPrevRankMap(prevD,type){
+  if(!prevD)return{};
+  const data=buildTableRows(prevD.rows,prevD.slot,null,type);
+  const hasAcv=data.some(r=>r.his>0);
+  if(hasAcv){const sorted=[...data].sort((a,b)=>b.acv-a.acv);sorted.forEach((r,i)=>r.rank=i+1);}
+  else{data.sort((a,b)=>b.spd-a.spd);data.forEach((r,i)=>r.rank=i+1);}
+  const map={};data.forEach(r=>map[r.code]=r.rank);return map;
+}
+
+function getAcvRanked(rows,type,slot,prevD){
+  const data=buildTableRows(rows,slot||'10',prevD||null,type);
+  const hasAcv=data.some(r=>r.his>0);
+  if(hasAcv)data.sort((a,b)=>b.acv-a.acv);else data.sort((a,b)=>b.spd-a.spd);
+  return data;
+}
+
+/* ============================================================ RENDER TABLE (Tampilan Web) ============================================================ */
+function renderTableHTML(rows,slot,prevD,type,prevSlotLabel){
+  const showDelta=!!prevD;
+  const prevLbl=prevSlotLabel||'Jam Sblm';
+  const data=buildTableRows(rows,slot,prevD,type);
+  const prevRankMap=getPrevRankMap(prevD,type);
+  const hasAcv=data.some(r=>r.his>0);
+  if(hasAcv){const sorted=[...data].sort((a,b)=>b.acv-a.acv);sorted.forEach((r,i)=>r.rank=i+1);}
+  data.sort((a,b)=>a.rank-b.rank);
+  data.forEach(r=>{r.pr=prevRankMap[r.code]||null;r.delta=(r.pr!=null)?r.pr-r.rank:null;});
+  const sumHisData=data.reduce((s,r)=>s+(r.his||0),0);
+  const totHisKey=type==='AM'?'totHisAM':'totHisAS';
+  const totTgtKey=type==='AM'?'totTgtAM':'totTgtAS';
+  const totHis=(S[totHisKey]&&S[totHisKey][slot]>0)?S[totHisKey][slot]:(S.totHis&&S.totHis.global>0?S.totHis.global:sumHisData);
+  const totTgt=(S[totTgtKey]&&S[totTgtKey][slot]>0)?S[totTgtKey][slot]:(S.totTgt&&S.totTgt.global>0?S.totTgt.global:data.reduce((s,r)=>s+(r.tgt||0),0));
+
+  let totalRealTime = 0;
+  let totAcv = 0;
+  let totGrow = 0;
+
+  if (type === 'AM') {
+    let sumSpd = rows.reduce((s,r) => s + r.spd, 0);
+    totalRealTime = rows.length ? (sumSpd / rows.length) : 0; // RATA-RATA AM
+
+    // Total ACV: sum(spd) / sum(tgt) — jika ada TGT, else sum(spd)/sum(his)
+    const sumTgt = data.reduce((s,r)=>s+(r.tgt||0),0);
+    const sumHisValid = data.reduce((s,r)=>s+(r.his||0),0);
+    const sumSpdValid = data.filter(r=>(r.tgt||r.his)>0).reduce((s,r)=>s+r.spd,0);
+    if(sumTgt>0) totAcv = sumSpdValid/sumTgt*100;
+    else if(sumHisValid>0) totAcv = data.reduce((s,r)=>s+r.spd,0)/sumHisValid*100;
+
+    const validRows = data.filter(r => r.his > 0);
+    const targetRows = validRows.length ? validRows : data;
+    if (targetRows.length) {
+      totGrow = targetRows.reduce((s,r)=>s+(r.growth||0),0) / targetRows.length; // RATA-RATA AM
+    }
+  } else {
+    // AS mengikuti persis rata-rata AM
+    const dAM = S.data['AM_' + slot];
+    if (dAM && dAM.rows && dAM.rows.length) {
+      let sumSpdAM = dAM.rows.reduce((s,r) => s + r.spd, 0);
+      totalRealTime = sumSpdAM / dAM.rows.length;
+      
+      const amData = buildTableRows(dAM.rows, slot, null, 'AM');
+      const sumTgtAM = amData.reduce((s,r)=>s+(r.tgt||0),0);
+      const sumHisAM = amData.reduce((s,r)=>s+(r.his||0),0);
+      const sumSpdAMv = amData.filter(r=>(r.tgt||r.his)>0).reduce((s,r)=>s+r.spd,0);
+      if(sumTgtAM>0) totAcv = sumSpdAMv/sumTgtAM*100;
+      else if(sumHisAM>0) totAcv = amData.reduce((s,r)=>s+r.spd,0)/sumHisAM*100;
+
+      const validAMRows = amData.filter(r => r.his > 0);
+      const targetAMRows = validAMRows.length ? validAMRows : amData;
+      if (targetAMRows.length) {
+        totGrow = targetAMRows.reduce((s,r)=>s+(r.growth||0),0) / targetAMRows.length;
+      }
+    } else {
+      let sumSpd = rows.reduce((s,r) => s + r.spd, 0);
+      totalRealTime = rows.length ? (sumSpd / rows.length) : 0;
+
+      const sumTgt = data.reduce((s,r)=>s+(r.tgt||0),0);
+      const sumHisValid = data.reduce((s,r)=>s+(r.his||0),0);
+      const sumSpdValid = data.filter(r=>(r.tgt||r.his)>0).reduce((s,r)=>s+r.spd,0);
+      if(sumTgt>0) totAcv = sumSpdValid/sumTgt*100;
+      else if(sumHisValid>0) totAcv = data.reduce((s,r)=>s+r.spd,0)/sumHisValid*100;
+
+      const validRows = data.filter(r => r.his > 0);
+      const targetRows = validRows.length ? validRows : data;
+      if (targetRows.length) {
+        totGrow = targetRows.reduce((s,r)=>s+(r.growth||0),0) / targetRows.length;
+      }
+    }
+  }
+
+  return`<div class="table-wrap"><table>
+    <thead><tr>
+      <th>No</th><th>Inisial</th><th>Nama</th>
+      <th>HIS SPD</th><th>TGT SPD</th>
+      <th>Real Time<br>${SLOT_LBL[slot]}</th>
+      <th>ACV SPD<br><span style="font-size:9px;opacity:.7">vs TGT</span></th><th>Growth<br><span style="font-size:9px;opacity:.7">vs HIS</span></th>
+      ${showDelta?`<th>${prevLbl}</th>`:''}
+      <th>Rank</th>
+      ${showDelta?`<th>Δ</th>`:''}
+    </tr></thead>
+    <tbody>
+    ${data.map((r,i)=>`<tr>
+      <td class="c" style="color:var(--text3)">${i+1}.</td>
+      <td class="l"><b style="color:var(--text);letter-spacing:.3px">${r.code}</b></td>
+      <td class="l" style="color:var(--text3);font-size:10.5px">${r.nama}</td>
+      <td>${fmt(r.his)}</td>
+      <td>${fmt(r.tgt)}</td>
+      <td style="color:var(--text);font-weight:600">${fmtR(r.spd)}</td>
+      <td class="c"><span class="${acvCls(r.acv)}">${(r.tgt||r.his)?r.acv.toFixed(1)+'%':'-'}</span></td>
+      <td class="c ${r.his?(r.growth<0?'g-neg':'g-pos'):''}">${r.his?pct(r.growth):'-'}</td>
+      ${showDelta?`<td class="c" style="color:var(--text3)">${r.pr||'-'}</td>`:''}
+      <td class="c"><span class="${rnkCls(r.rank)}">${r.rank}</span> ${r.rank===1?'🥇':r.rank===2?'🥈':r.rank===3?'🥉':''}</td>
+      ${showDelta?`<td class="c ${r.delta===null?'ds':r.delta>0?'du':r.delta<0?'dd':'ds'}">${r.delta===null?'-':r.delta>0?'▲ '+r.delta:r.delta<0?'▼ '+Math.abs(r.delta):'—'}</td>`:''}
+    </tr>`).join('')}
+    <tr class="tot-row">
+      <td colspan="3" class="l">TOTAL</td>
+      <td>${fmt(totHis)}</td><td>${fmt(totTgt)}</td>
+      <td style="font-weight:700; color:var(--text)">${fmtR(totalRealTime)}</td>
+      <td class="c"><span class="${acvCls(totAcv)}">${totAcv ? totAcv.toFixed(1)+'%':'-'}</span></td>
+      <td class="c ${totGrow<0?'g-neg':'g-pos'}">${totGrow ? pct(totGrow):'-'}</td>
+      ${showDelta?'<td></td>':''}
+      <td></td>
+      ${showDelta?'<td></td>':''}
+    </tr>
+    </tbody>
+  </table></div>`;
+}
+
+/* ============================================================ EXPORT IMAGE ============================================================ */
+function buildExportHTML(rows,slot,prevD,type,prevSlotLabel){
+  const showDelta=!!prevD;
+  const prevLbl=prevSlotLabel||'Jam Sblm';
+  const data=buildTableRows(rows,slot,prevD,type);
+  const prevRankMap=getPrevRankMap(prevD,type);
+  const hasAcv=data.some(r=>r.his>0);
+  if(hasAcv){const sorted=[...data].sort((a,b)=>b.acv-a.acv);sorted.forEach((r,i)=>r.rank=i+1);}
+  data.sort((a,b)=>a.rank-b.rank);
+  data.forEach(r=>{r.pr=prevRankMap[r.code]||null;r.delta=(r.pr!=null)?r.pr-r.rank:null;});
+  
+  const sumHisData=data.reduce((s,r)=>s+(r.his||0),0);
+  const totHisKey=type==='AM'?'totHisAM':'totHisAS';const totTgtKey=type==='AM'?'totTgtAM':'totTgtAS';
+  const totHis=(S[totHisKey]&&S[totHisKey][slot]>0)?S[totHisKey][slot]:(S.totHis&&S.totHis.global>0?S.totHis.global:sumHisData);
+  const totTgt=(S[totTgtKey]&&S[totTgtKey][slot]>0)?S[totTgtKey][slot]:(S.totTgt&&S.totTgt.global>0?S.totTgt.global:data.reduce((s,r)=>s+(r.tgt||0),0));
+  
+  let totalRealTime = 0;
+  let totAcv = 0;
+  let totGrow = 0;
+
+  if (type === 'AM') {
+    let sumSpd = rows.reduce((s,r) => s + r.spd, 0);
+    totalRealTime = rows.length ? (sumSpd / rows.length) : 0;
+
+    const sumTgt = data.reduce((s,r)=>s+(r.tgt||0),0);
+    const sumHisValid = data.reduce((s,r)=>s+(r.his||0),0);
+    const sumSpdValid = data.filter(r=>(r.tgt||r.his)>0).reduce((s,r)=>s+r.spd,0);
+    if(sumTgt>0) totAcv = sumSpdValid/sumTgt*100;
+    else if(sumHisValid>0) totAcv = data.reduce((s,r)=>s+r.spd,0)/sumHisValid*100;
+
+    const validRows = data.filter(r => r.his > 0);
+    const targetRows = validRows.length ? validRows : data;
+    if (targetRows.length) {
+      totGrow = targetRows.reduce((s,r)=>s+(r.growth||0),0) / targetRows.length;
+    }
+  } else {
+    const dAM = S.data['AM_' + slot];
+    if (dAM && dAM.rows && dAM.rows.length) {
+      let sumSpdAM = dAM.rows.reduce((s,r) => s + r.spd, 0);
+      totalRealTime = sumSpdAM / dAM.rows.length;
+      
+      const amData = buildTableRows(dAM.rows, slot, null, 'AM');
+      const sumTgtAM = amData.reduce((s,r)=>s+(r.tgt||0),0);
+      const sumHisAM = amData.reduce((s,r)=>s+(r.his||0),0);
+      const sumSpdAMv = amData.filter(r=>(r.tgt||r.his)>0).reduce((s,r)=>s+r.spd,0);
+      if(sumTgtAM>0) totAcv = sumSpdAMv/sumTgtAM*100;
+      else if(sumHisAM>0) totAcv = amData.reduce((s,r)=>s+r.spd,0)/sumHisAM*100;
+
+      const validAMRows = amData.filter(r => r.his > 0);
+      const targetAMRows = validAMRows.length ? validAMRows : amData;
+      if (targetAMRows.length) {
+        totGrow = targetAMRows.reduce((s,r)=>s+(r.growth||0),0) / targetAMRows.length;
+      }
+    } else {
+      let sumSpd = rows.reduce((s,r) => s + r.spd, 0);
+      totalRealTime = rows.length ? (sumSpd / rows.length) : 0;
+
+      const sumTgt = data.reduce((s,r)=>s+(r.tgt||0),0);
+      const sumHisValid = data.reduce((s,r)=>s+(r.his||0),0);
+      const sumSpdValid = data.filter(r=>(r.tgt||r.his)>0).reduce((s,r)=>s+r.spd,0);
+      if(sumTgt>0) totAcv = sumSpdValid/sumTgt*100;
+      else if(sumHisValid>0) totAcv = data.reduce((s,r)=>s+r.spd,0)/sumHisValid*100;
+
+      const validRows = data.filter(r => r.his > 0);
+      const targetRows = validRows.length ? validRows : data;
+      if (targetRows.length) {
+        totGrow = targetRows.reduce((s,r)=>s+(r.growth||0),0) / targetRows.length;
+      }
+    }
+  }
+  
+  const today=new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+  return`<div class="exp-wrap">
+    <div class="exp-title">REALTIME SALES — Depo Lombok</div>
+    <div class="exp-sub">${today} &nbsp;|&nbsp; ${SLOT_LBL[slot]}</div>
+    <div class="exp-by">BY ${type}</div>
+    <table class="exp-table">
+      <thead><tr>
+        <th>No</th><th>Inisial</th><th>Nama</th>
+        <th>HIS SPD</th><th>TGT SPD</th>
+        <th>Real Time ${SLOT_LBL[slot]}</th>
+        <th>ACV SPD<br><small>vs TGT</small></th><th>Growth<br><small>vs HIS</small></th>
+        ${showDelta?`<th>Rank ${prevLbl}</th>`:''}
+        <th>Rank</th>
+        ${showDelta?`<th>Selisih</th>`:''}
+      </tr></thead>
+      <tbody>
+      ${data.map((r,i)=>`<tr>
+        <td class="ec" style="color:#000">${i+1}.</td>
+        <td class="el" style="color:#000"><b>${r.code}</b></td>
+        <td class="el" style="font-size:10px;color:#000">${r.nama}</td>
+        <td style="color:#000">${fmt(r.his)}</td><td style="color:#000">${fmt(r.tgt)}</td>
+        <td style="color:#000"><b>${fmtR(r.spd)}</b></td>
+        <td class="ec"><span class="${expAcvCls(r.acv)}">${(r.tgt||r.his)?r.acv.toFixed(1)+'%':'-'}</span></td>
+        <td class="ec" style="color:${r.his?(r.growth<0?'#dc2626':'#16a34a'):'#000'};font-weight:${r.his?700:400}">${r.his?pct(r.growth):'-'}</td>
+        ${showDelta?`<td class="ec" style="color:#000">${r.pr||'-'}</td>`:''}
+        <td class="ec"><span class="exp-rank" style="${r.rank===1?'background:#d97706':r.rank===2?'background:#64748b':r.rank===3?'background:#a05c1f':''}">${r.rank}</span> ${r.rank===1?'🥇':r.rank===2?'🥈':r.rank===3?'🥉':''}</td>
+        ${showDelta?`<td class="ec" style="color:${r.delta===null?'#000':r.delta>0?'#16a34a':r.delta<0?'#dc2626':'#000'}"><b>${r.delta===null?'-':r.delta>0?'▲ '+r.delta:r.delta<0?'▼ '+Math.abs(r.delta):'-'}</b></td>`:''}
+      </tr>`).join('')}
+      <tr class="tot">
+        <td colspan="3" class="el" style="color:#000">TOTAL</td>
+        <td style="color:#000">${fmt(totHis)}</td><td style="color:#000">${fmt(totTgt)}</td>
+        <td style="color:#000"><b>${fmtR(totalRealTime)}</b></td>
+        <td class="ec"><span class="${expAcvCls(totAcv)}">${totAcv ? totAcv.toFixed(1)+'%':'-'}</span></td>
+        <td class="ec" style="color:${totGrow<0?'#dc2626':'#16a34a'};font-weight:700">${totGrow ? pct(totGrow):'-'}</td>
+        ${showDelta?'<td style="color:#000"></td>':''}<td style="color:#000"></td>${showDelta?'<td style="color:#000"></td>':''}
+      </tr>
+      </tbody>
+    </table>
+  </div>`;
+}
+
+async function downloadImg(type){
+  const slot=S.manualSlot||curSlot();
+  const prevSlot=getPrevSlot(slot);const prevLbl=prevSlot?SLOT_LBL[prevSlot]:'Jam Sblm';
+  const dAM=S.data['AM_'+slot];const dAS=S.data['AS_'+slot];
+  if(type==='AM'&&!dAM){alert('Belum ada data AM untuk '+SLOT_LBL[slot]);return;}
+  if(type==='AS'&&!dAS){alert('Belum ada data AS untuk '+SLOT_LBL[slot]);return;}
+  if(type==='BOTH'&&!dAM&&!dAS){alert('Belum ada data AM maupun AS untuk '+SLOT_LBL[slot]);return;}
+  const prevDAM=(prevSlot&&S.data['AM_'+prevSlot])||null;
+  const prevDAS=(prevSlot&&S.data['AS_'+prevSlot])||null;
+  let combinedHTML='';
+  if((type==='AM'||type==='BOTH')&&dAM) combinedHTML+=buildExportHTML(dAM.rows,slot,prevDAM,'AM',prevLbl);
+  if((type==='AS'||type==='BOTH')&&dAS){if(combinedHTML)combinedHTML+='<div style="height:18px"></div>';combinedHTML+=buildExportHTML(dAS.rows,slot,prevDAS,'AS',prevLbl);}
+  const el=document.createElement('div');
+  el.style.cssText='position:absolute;left:-9999px;top:0;width:940px;background:#fff;';
+  el.innerHTML=`<div style="background:#fff;padding:0;font-family:Arial,sans-serif">${combinedHTML}</div>`;
+  document.body.appendChild(el);
+  try{
+    await new Promise(r=>setTimeout(r,120));
+    const canvas=await html2canvas(el.firstChild,{backgroundColor:'#ffffff',scale:2,useCORS:true,logging:false,allowTaint:true,width:el.firstChild.scrollWidth,height:el.firstChild.scrollHeight,windowWidth:el.firstChild.scrollWidth});
+    const link=document.createElement('a');
+    const date=new Date().toLocaleDateString('id-ID').replace(/\//g,'-');
+    link.download=`RealTime_${type==='BOTH'?'AM_AS':type}_${slot}_${date}.png`;
+    link.href=canvas.toDataURL('image/png');
+    document.body.appendChild(link);link.click();document.body.removeChild(link);
+  }catch(e){alert('Gagal membuat gambar: '+e.message);}
+  finally{document.body.removeChild(el);}
+}
+
+/* ============================================================ UPLOAD XLSX ============================================================ */
+function handleXLSXUpload(file){
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const json=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      let hisCnt=0,foundTotal=false,tempTotHisAM=0,tempTotTgtAM=0;
+      for(let i=0;i<json.length;i++){
+        const row=json[i];
+        const rowStr=row.map(c=>String(c||'').toUpperCase()).join('|');
+        const inisial=String(row[1]||'').trim().toUpperCase();
+        const nama=String(row[2]||'').trim().toUpperCase();
+        const isTotal=rowStr.includes('TOTAL')||nama==='TOTAL'||inisial==='TOTAL';
+        if(isTotal){
+          let hisVal=0,tgtVal=0;
+          for(let ci=3;ci<row.length;ci++){const v=parseFloat(String(row[ci]).replace(/,/g,''));if(!isNaN(v)&&v>1000){if(!hisVal)hisVal=v;else if(!tgtVal&&v!==hisVal){tgtVal=v;break;}}}
+          const colE=parseFloat(String(row[4]||'').replace(/,/g,''));const colF=parseFloat(String(row[5]||'').replace(/,/g,''));
+          if(!isNaN(colE)&&colE>0)hisVal=colE;if(!isNaN(colF)&&colF>0)tgtVal=colF;
+          tempTotHisAM=Math.round(hisVal)||0;tempTotTgtAM=Math.round(tgtVal)||0;foundTotal=true;continue;
+        }
+        const mappedAM=AM_MAP[inisial]||inisial;
+        const his=parseFloat(String(row[4]||'').replace(/,/g,''));const tgt=parseFloat(String(row[5]||'').replace(/,/g,''));
+        if(inisial&&!isNaN(his)&&his>0){
+          if(['AMI','EWY','EWO','MLN','IRN','TSA','MYA'].includes(inisial)||Object.values(AM_MAP).includes(inisial)){
+            S.hisSPD[mappedAM]=Math.round(his);hisCnt++;
+            if(tgt&&!isNaN(tgt)&&tgt>0)S.tgtSPD[mappedAM]=Math.round(tgt);
+          }
+          if(AS_MAP[inisial] || Object.values(AS_MAP).includes(inisial)){
+            const dispCode = AS_MAP[inisial] || inisial;
+            S.hisSPD[dispCode]=Math.round(his);hisCnt++;
+            if(tgt&&!isNaN(tgt)&&tgt>0)S.tgtSPD[dispCode]=Math.round(tgt);
+          }
+        }
+      }
+      if(!S.totHisAM)S.totHisAM={};if(!S.totTgtAM)S.totTgtAM={};if(!S.totHisAS)S.totHisAS={};if(!S.totTgtAS)S.totTgtAS={};
+      if(foundTotal&&tempTotHisAM>0){TIME_SLOTS.forEach(sl=>{S.totHisAM[sl]=tempTotHisAM;S.totTgtAM[sl]=tempTotTgtAM;S.totHisAS[sl]=tempTotHisAM;S.totTgtAS[sl]=tempTotTgtAM;});S.totHis.global=tempTotHisAM;S.totTgt.global=tempTotTgtAM;}
+      save();render();
+      alert(`✅ Import berhasil! ${hisCnt} data HIS/TGT dimuat.${foundTotal?' Total HIS: '+tempTotHisAM.toLocaleString('id-ID')+' | TGT: '+tempTotTgtAM.toLocaleString('id-ID'):''}`);
+    }catch(err){alert('Gagal baca file: '+err.message);}
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/* ============================================================ EXPORT / IMPORT STATE ============================================================ */
+function exportState(){
+  const json=JSON.stringify(S,null,2);
+  const blob=new Blob([json],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const date=new Date().toLocaleDateString('id-ID').replace(/\//g,'-');
+  a.download=`RTS_Data_${date}.json`;a.href=url;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+function importState(file){
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const parsed=JSON.parse(e.target.result);
+      const merged={...getInitState(),...parsed};
+      if(!merged.amTextsBySlot)merged.amTextsBySlot={};
+      if(!merged.asTextsBySlot)merged.asTextsBySlot={};
+      if(!merged.hisSPD)merged.hisSPD={};
+      if(!merged.tgtSPD)merged.tgtSPD={};
+      if(!merged.data)merged.data={};
+      S=merged;save();render();
+      alert('✅ Data berhasil dimuat!');
+    }catch(err){alert('Gagal baca file: '+err.message);}
+  };
+  reader.readAsText(file);
+}
+
+/* ============================================================ XLSX DOWNLOAD ============================================================ */
+function dlXLSX(type){
+  const slot=S.manualSlot||curSlot();
+  const key=type+'_'+slot;const d=S.data[key];
+  if(!d){alert('Belum ada data '+type);return;}
+  const prevSlotXL=getPrevSlot(slot);const prevD=(prevSlotXL&&S.data[(type+'_'+prevSlotXL)])||null;
+  const showDelta=!!prevD;const data=buildTableRows(d.rows,slot,prevD,type);const prevRankMapXL=getPrevRankMap(prevD,type);
+  const hasAcv=data.some(r=>r.his>0);
+  if(hasAcv){const sorted=[...data].sort((a,b)=>b.acv-a.acv);sorted.forEach((r,i)=>r.rank=i+1);}
+  data.sort((a,b)=>a.rank-b.rank);data.forEach(r=>{r.pr=prevRankMapXL[r.code]||null;r.delta=(r.pr!=null)?r.pr-r.rank:null;});
+  const hdr=['No','Inisial','Nama','HIS SPD','TGT SPD','Real Time '+SLOT_LBL[slot],'ACV SPD','Growth'];
+  if(showDelta)hdr.push('RANK (jam sblm)');hdr.push('Rank '+SLOT_LBL[slot]);if(showDelta)hdr.push('Selisih');
+  const rows=data.map((r,i)=>{const row=[`${i+1}.`,r.code,r.nama,r.his||'',r.tgt||'',r.spd,r.his?r.acv.toFixed(1)+'%':'-',r.his?pct(r.growth):'-'];if(showDelta)row.push(r.pr||'-');row.push(r.rank);if(showDelta)row.push(r.delta===null?'-':r.delta>0?'+'+r.delta:r.delta<0?r.delta:0);return row;});
+  
+  let totalRealTime = 0;
+  let totAcv = 0;
+  let totGrow = 0;
+
+  if (type === 'AM') {
+    let sumSpd = d.rows.reduce((s,r) => s + r.spd, 0);
+    totalRealTime = d.rows.length ? (sumSpd / d.rows.length) : 0; // RATA-RATA AM
+
+    const validRows = data.filter(r => r.his > 0);
+    const targetRows = validRows.length ? validRows : data;
+    if (targetRows.length) {
+      totAcv = targetRows.reduce((s,r)=>s+(r.acv||0),0) / targetRows.length; // RATA-RATA AM
+      totGrow = targetRows.reduce((s,r)=>s+(r.growth||0),0) / targetRows.length; // RATA-RATA AM
+    }
+  } else {
+    // AS mengikuti persis rata-rata AM
+    const dAM = S.data['AM_' + slot];
+    if (dAM && dAM.rows && dAM.rows.length) {
+      let sumSpdAM = dAM.rows.reduce((s,r) => s + r.spd, 0);
+      totalRealTime = sumSpdAM / dAM.rows.length;
+      
+      const amData = buildTableRows(dAM.rows, slot, null, 'AM');
+      const validAMRows = amData.filter(r => r.his > 0);
+      const targetAMRows = validAMRows.length ? validAMRows : amData;
+      if (targetAMRows.length) {
+        totAcv = targetAMRows.reduce((s,r)=>s+(r.acv||0),0) / targetAMRows.length;
+        totGrow = targetAMRows.reduce((s,r)=>s+(r.growth||0),0) / targetAMRows.length;
+      }
+    } else {
+      let sumSpd = d.rows.reduce((s,r) => s + r.spd, 0);
+      totalRealTime = d.rows.length ? (sumSpd / d.rows.length) : 0;
+
+      const validRows = data.filter(r => r.his > 0);
+      const targetRows = validRows.length ? validRows : data;
+      if (targetRows.length) {
+        totAcv = targetRows.reduce((s,r)=>s+(r.acv||0),0) / targetRows.length;
+        totGrow = targetRows.reduce((s,r)=>s+(r.growth||0),0) / targetRows.length;
+      }
+    }
+  }
+
+  const totHisKey=type==='AM'?'totHisAM':'totHisAS';const totTgtKey=type==='AM'?'totTgtAM':'totTgtAS';
+  const sumHisData=data.reduce((s,r)=>s+(r.his||0),0);
+  const totHis=(S[totHisKey]&&S[totHisKey][slot]>0)?S[totHisKey][slot]:(S.totHis&&S.totHis.global>0?S.totHis.global:sumHisData);
+  const totTgt=(S[totTgtKey]&&S[totTgtKey][slot]>0)?S[totTgtKey][slot]:(S.totTgt&&S.totTgt.global>0?S.totTgt.global:data.reduce((s,r)=>s+(r.tgt||0),0));
+  
+  const totalRow=['','','TOTAL',totHis||'',totTgt||'',Math.round(totalRealTime),totAcv?totAcv.toFixed(1)+'%':'-',totGrow?pct(totGrow):'-'];
+  if(showDelta)totalRow.push('');totalRow.push('');if(showDelta)totalRow.push('');rows.push(totalRow);
+  const ws=XLSX.utils.aoa_to_sheet([hdr,...rows]);ws['!cols']=hdr.map((_,i)=>({wch:i<=2?18:13}));
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'BY '+type);
+  XLSX.writeFile(wb,`RealTime_${type}_${slot}_${new Date().toLocaleDateString('id-ID').replace(/\//g,'-')}.xlsx`);
+}
+
+/* ============================================================ REKAP WA ============================================================ */
+function fmtDateRekap(){const d=new Date();const dd=String(d.getDate()).padStart(2,'0');const bulan=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];return`${dd} ${bulan[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;}
+
+function generateRekapText(slot){
+  const dateStr=fmtDateRekap();const jamStr='REAL TIME '+slot+'.00';
+  const dAM=S.data['AM_'+slot];const dAS=S.data['AS_'+slot];
+  let txt='Berikut Update Sales Real-Time \n';
+  if(dAM&&dAM.rows.length){
+    const ranked=getAcvRanked(dAM.rows,'AM',slot,null);
+    const top3=ranked.slice(0,3);const bot3=[...ranked].slice(-3).reverse();
+    txt+=`${dateStr} Depo Lombok\n ${jamStr} \nRANK AM\n`;
+    txt+=`Pencapaian Per AM SPD Tertinggi\n`;top3.forEach((r,i)=>txt+=`${i+1}. ${r.code}\n`);
+    txt+=`Pencapaian Per AM SPD Terendah\n`;bot3.forEach((r,i)=>txt+=`${i+1}. ${r.code}\n`);
+  }
+  if(dAS&&dAS.rows.length){
+    const ranked=getAcvRanked(dAS.rows,'AS',slot,null);
+    const top3=ranked.slice(0,3);const bot3=[...ranked].slice(-3).reverse();
+    txt+=`${dateStr} Depo Lombok\n ${jamStr} \nRANK AS\n`;
+    txt+=`Pencapaian Per AS SPD Tertinggi\n`;top3.forEach((r,i)=>txt+=`${i+1}. ${r.code}\n`);
+    txt+=`Pencapaian Per AS SPD Terendah\n`;bot3.forEach((r,i)=>txt+=`${i+1}. ${r.code}\n`);
+  }
+  txt+='Terimakasih';return txt.trim();
+}
+
+function openRekap(){
+  const slot=S.manualSlot||curSlot();const txt=generateRekapText(slot);
+  if(!txt||txt==='Terimakasih'){alert('Belum ada data AM atau AS untuk '+SLOT_LBL[slot]);return;}
+  document.getElementById('rekapTxt').value=txt;document.getElementById('rekapModal').classList.add('open');
+}
+function closeRekap(){document.getElementById('rekapModal').classList.remove('open');}
+function copyRekap(){
+  const ta=document.getElementById('rekapTxt');ta.select();ta.setSelectionRange(0,99999);
+  try{document.execCommand('copy');}catch(e){navigator.clipboard&&navigator.clipboard.writeText(ta.value);}
+  const btn=document.getElementById('copyBtn');const orig=btn.innerHTML;
+  btn.innerHTML='<i class="ti ti-check"></i> Tersalin!';btn.classList.add('copy-flash');
+  setTimeout(()=>{btn.innerHTML=orig;btn.classList.remove('copy-flash');},1200);
+}
+
+/* ============================================================ RENDER VIEWS ============================================================ */
+function renderViewAM(slot){
+  const d=S.data['AM_'+slot];
+  if(!d)return`<div class="card"><div class="empty-state"><i class="ti ti-table-off"></i><p>Belum ada data AM untuk ${SLOT_LBL[slot]}</p></div></div>`;
+  const prevSlotAM=getPrevSlot(slot);const prevD=(prevSlotAM&&S.data['AM_'+prevSlotAM])||null;const prevLblAM=prevSlotAM?SLOT_LBL[prevSlotAM]:'Jam Sblm';
+  
+  const total = d.rows.length ? d.rows.reduce((s,r)=>s+r.spd,0) / d.rows.length : 0;
+
+  const ranked=getAcvRanked(d.rows,'AM',slot,prevD);
+  return`<div class="card">
+    <div class="card-hdr">
+      <i class="ti ti-users" style="color:var(--blue);font-size:16px"></i>
+      <span class="card-title">Ranking BY AM</span>
+      <span class="badge badge-blue">${d.rows.length} AM</span>
+      <span class="spacer"></span>
+      <span style="font-size:10px;color:var(--text3)">Update ${new Date(d.ts).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</span>
+    </div>
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-lbl">Rata-rata SPD</div><div class="stat-val">${fmtR(total)}</div></div>
+      <div class="stat"><div class="stat-lbl">Jumlah AM</div><div class="stat-val">${d.rows.length}</div></div>
+      <div class="stat"><div class="stat-lbl">🥇 Rank 1</div><div class="stat-val" style="color:var(--amber)">${ranked[0]?.code||'-'}</div></div>
+      <div class="stat"><div class="stat-lbl">Rank Akhir</div><div class="stat-val" style="color:var(--red)">${ranked[ranked.length-1]?.code||'-'}</div></div>
+    </div>
+    ${renderTableHTML(d.rows,slot,prevD,'AM',prevLblAM)}
+  </div>`;
+}
+
+function renderViewAS(slot){
+  const d=S.data['AS_'+slot];
+  if(!d)return`<div class="card"><div class="empty-state"><i class="ti ti-table-off"></i><p>Belum ada data AS untuk ${SLOT_LBL[slot]}</p></div></div>`;
+  const prevSlotAS=getPrevSlot(slot);const prevD=(prevSlotAS&&S.data['AS_'+prevSlotAS])||null;const prevLblAS=prevSlotAS?SLOT_LBL[prevSlotAS]:'Jam Sblm';
+  
+  let total = d.rows.length ? d.rows.reduce((s,r)=>s+r.spd,0) / d.rows.length : 0;
+  const dAM = S.data['AM_'+slot];
+  if(dAM && dAM.rows && dAM.rows.length) {
+    total = dAM.rows.reduce((s,r)=>s+r.spd,0) / dAM.rows.length;
+  }
+  
+  const ranked=getAcvRanked(d.rows,'AS',slot,prevD);
+  return`<div class="card">
+    <div class="card-hdr">
+      <i class="ti ti-users-group" style="color:var(--green);font-size:16px"></i>
+      <span class="card-title">Ranking BY AS</span>
+      <span class="badge badge-green">${d.rows.length} AS</span>
+      <span class="spacer"></span>
+      <span style="font-size:10px;color:var(--text3)">Update ${new Date(d.ts).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</span>
+    </div>
+    <div class="stats-grid">
+      <div class="stat"><div class="stat-lbl">Rata-rata SPD</div><div class="stat-val">${fmtR(total)}</div></div>
+      <div class="stat"><div class="stat-lbl">Jumlah AS</div><div class="stat-val">${d.rows.length}</div></div>
+      <div class="stat"><div class="stat-lbl">🥇 Rank 1</div><div class="stat-val" style="color:var(--amber)">${ranked[0]?.code||'-'}</div></div>
+      <div class="stat"><div class="stat-lbl">Rank Akhir</div><div class="stat-val" style="color:var(--red)">${ranked[ranked.length-1]?.code||'-'}</div></div>
+    </div>
+    ${renderTableHTML(d.rows,slot,prevD,'AS',prevLblAS)}
+  </div>`;
+}
+
+function renderHisTgt(){
+  const amCodes=['AMI','EWY','MLN','IRN','TSA','MYA'];
+  const asCodes=[...new Set(Object.values(AS_MAP))].sort();
+  if(!S.totHisAM)S.totHisAM={};if(!S.totTgtAM)S.totTgtAM={};if(!S.totHisAS)S.totHisAS={};if(!S.totTgtAS)S.totTgtAS={};
+  function tblSection(codes,title,nameMap){
+    return`<div class="his-blk">
+      <div class="his-blk-t">${title}</div>
+      <table class="his-table">
+        <thead><tr><th>Kode</th><th>Nama</th><th>HIS SPD</th><th>TGT SPD</th></tr></thead>
+        <tbody>${codes.map(c=>`<tr>
+          <td><b style="color:var(--text)">${c}</b></td>
+          <td style="font-size:10px;color:var(--text3)">${nameMap[c]||AM_NAMES[c]||AS_NAMES[c]||''}</td>
+          <td><input class="inp" type="number" value="${S.hisSPD[c]||''}" placeholder="0" onchange="S.hisSPD['${c}']=parseInt(this.value)||0;save()"></td>
+          <td><input class="inp" type="number" value="${S.tgtSPD[c]||''}" placeholder="0" onchange="S.tgtSPD['${c}']=parseInt(this.value)||0;save()"></td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>`;
+  }
+  const totSection=`<div class="card" style="margin-top:0">
+    <div class="card-hdr">
+      <i class="ti ti-chart-bar" style="color:var(--blue);font-size:16px"></i>
+      <span class="card-title">Total HIS & TGT per Jam</span>
+      <span class="badge badge-blue">Per Jam</span>
+    </div>
+    <div class="info-box"><i class="ti ti-info-circle"></i><span>Salin nilai total langsung dari baris TOTAL di file Excel. Jika semua jam sama, isi jam 10 saja — dipakai sebagai fallback global.</span></div>
+    <div style="overflow-x:auto;padding:0 16px 14px">
+      <table class="his-table" style="min-width:440px">
+        <thead><tr><th>Jam</th><th>Total HIS AM</th><th>Total TGT AM</th><th>Total HIS AS</th><th>Total TGT AS</th></tr></thead>
+        <tbody>
+          ${TIME_SLOTS.map(s=>`<tr>
+            <td><b style="color:var(--text)">${SLOT_LBL[s]}</b></td>
+            <td><input class="inp" type="number" value="${S.totHisAM[s]!=null?S.totHisAM[s]:''}" placeholder="0" onchange="if(!S.totHisAM)S.totHisAM={};S.totHisAM['${s}']=parseInt(this.value)||0;save()"></td>
+            <td><input class="inp" type="number" value="${S.totTgtAM[s]!=null?S.totTgtAM[s]:''}" placeholder="0" onchange="if(!S.totTgtAM)S.totTgtAM={};S.totTgtAM['${s}']=parseInt(this.value)||0;save()"></td>
+            <td><input class="inp" type="number" value="${S.totHisAS[s]!=null?S.totHisAS[s]:''}" placeholder="0" onchange="if(!S.totHisAS)S.totHisAS={};S.totHisAS['${s}']=parseInt(this.value)||0;save()"></td>
+            <td><input class="inp" type="number" value="${S.totTgtAS[s]!=null?S.totTgtAS[s]:''}" placeholder="0" onchange="if(!S.totTgtAS)S.totTgtAS={};S.totTgtAS['${s}']=parseInt(this.value)||0;save()"></td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>
+  </div>`;
+  return`${totSection}<div class="card">
+    <div class="card-hdr">
+      <i class="ti ti-list-details" style="color:var(--amber);font-size:16px"></i>
+      <span class="card-title">HIS SPD & TGT SPD per Individu</span>
+      <span class="badge badge-amber">Auto-simpan</span>
+    </div>
+    <div class="info-box"><i class="ti ti-info-circle"></i><span>Atau upload file Excel di tab Input Data untuk import otomatis. Kode yang ditampilkan adalah kode inisial resmi.</span></div>
+    <div class="his-grid">
+      ${tblSection(amCodes,'Per AM',AM_NAMES)}
+      ${tblSection(asCodes,'Per AS',AS_NAMES)}
+    </div>
+  </div>`;
+}
+
+function renderInput(slot){
+  const iSlot=S.inputSlot||'10';
+  return`
+  <div class="card">
+    <div class="card-hdr">
+      <i class="ti ti-clock" style="color:var(--blue);font-size:16px"></i>
+      <span class="card-title">Pilih Jam Input</span>
+      <span class="badge badge-amber">Disimpan per jam</span>
+    </div>
+    <div class="slot-pills">
+      ${TIME_SLOTS.map(s=>`<button class="slot-pill ${s===iSlot?'active':''}" onclick="S.inputSlot='${s}';save();render()">${SLOT_LBL[s]}</button>`).join('')}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <i class="ti ti-file-spreadsheet" style="color:var(--text2);font-size:16px"></i>
+      <span class="card-title">Upload HIS & TGT (Excel)</span>
+      <span class="badge badge-amber">Format REAL_TIME</span>
+    </div>
+    <div style="padding:12px 16px">
+      <div class="upload-zone" onclick="document.getElementById('xfile').click()" ondragover="event.preventDefault();this.style.borderColor='var(--blue)'" ondragleave="this.style.borderColor=''" ondrop="event.preventDefault();handleXLSXUpload(event.dataTransfer.files[0]);this.style.borderColor=''">
+        <div class="uz-icon"><i class="ti ti-cloud-upload"></i></div>
+        <p>Klik atau drag & drop file Excel (.xlsx)</p>
+        <small>Kolom: Inisial (B), HIS SPD (E), TGT SPD (F)</small>
+      </div>
+    </div>
+    <input type="file" id="xfile" accept=".xlsx,.xls" style="display:none" onchange="handleXLSXUpload(this.files[0]);this.value=''">
+    <div class="btn-row">
+      <button class="btn btn-ghost btn-sm" onclick="S.hisSPD={};S.tgtSPD={};save();render()"><i class="ti ti-trash"></i> Reset HIS/TGT</button>
+      <span style="font-size:11px;color:var(--text3)">${Object.keys(S.hisSPD).length} kode HIS dimuat</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <i class="ti ti-user" style="color:var(--blue);font-size:16px"></i>
+      <span class="card-title">Input Data AM</span>
+      <span class="badge badge-blue">1 teks — semua AM</span>
+      <span class="badge badge-amber" style="margin-left:auto">${SLOT_LBL[iSlot]}</span>
+    </div>
+    <div style="padding:12px 16px">
+      <textarea style="min-height:130px" id="amtxt" oninput="if(!S.amTextsBySlot)S.amTextsBySlot={};S.amTextsBySlot[S.inputSlot]=this.value;S.amText=this.value" placeholder="Paste teks telegram semua AM untuk ${SLOT_LBL[iSlot]}...">${esc((S.amTextsBySlot&&S.amTextsBySlot[iSlot])||'')}</textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-blue" onclick="processAM()"><i class="ti ti-check"></i> Proses AM — ${SLOT_LBL[iSlot]}</button>
+      <button class="btn btn-ghost btn-sm" onclick="if(!S.amTextsBySlot)S.amTextsBySlot={};S.amTextsBySlot[S.inputSlot]='';S.amText='';save();render()"><i class="ti ti-x"></i> Hapus</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hdr">
+      <i class="ti ti-users" style="color:var(--green);font-size:16px"></i>
+      <span class="card-title">Input Data AS</span>
+      <span class="badge badge-green">6 teks — per AM</span>
+      <span class="badge badge-amber" style="margin-left:auto">${SLOT_LBL[iSlot]}</span>
+    </div>
+    <div class="as-grid">
+      ${Array(6).fill(0).map((_,i)=>`
+        <div class="as-blk">
+          <div class="as-blk-t">AS dari AM ${i+1}</div>
+          <textarea style="min-height:90px" id="astxt${i}" oninput="if(!S.asTextsBySlot)S.asTextsBySlot={};if(!S.asTextsBySlot[S.inputSlot])S.asTextsBySlot[S.inputSlot]=Array(6).fill('');S.asTextsBySlot[S.inputSlot][${i}]=this.value" placeholder="Paste teks AS AM ${i+1} (${SLOT_LBL[iSlot]})...">${esc((S.asTextsBySlot&&S.asTextsBySlot[iSlot]&&S.asTextsBySlot[iSlot][i])||'')}</textarea>
+        </div>`).join('')}
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-blue" onclick="processAS()"><i class="ti ti-check"></i> Proses AS — ${SLOT_LBL[iSlot]}</button>
+      <button class="btn btn-ghost btn-sm" onclick="if(!S.asTextsBySlot)S.asTextsBySlot={};S.asTextsBySlot[S.inputSlot]=Array(6).fill('');S.asTexts=Array(6).fill('');save();render()"><i class="ti ti-x"></i> Hapus Semua</button>
+    </div>
+  </div>`;
+}
+
+/* ============================================================ MAIN RENDER ============================================================ */
+function render(){
+  const slot=S.manualSlot||curSlot();
+  const today=new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
+  document.getElementById('root').innerHTML=`
+    <div class="header">
+      <div class="header-left">
+        <h1>📊 Realtime Sales — Depo Lombok</h1>
+        <p><span class="live-dot"></span>${today} &nbsp;·&nbsp; Slot aktif: <b style="color:var(--blue)">${SLOT_LBL[slot]}</b></p>
+      </div>
+      <div class="header-right">
+        <select class="time-sel" onchange="S.manualSlot=this.value;save();render()">
+          ${TIME_SLOTS.map(s=>`<option value="${s}" ${s===slot?'selected':''}>${SLOT_LBL[s]}</option>`).join('')}
+        </select>
+        <button class="btn btn-amber btn-sm" onclick="downloadImg('BOTH')"><i class="ti ti-photo-down"></i> Img</button>
+        <button class="btn btn-green btn-sm" onclick="dlXLSX('AM')"><i class="ti ti-download"></i> xlsx AM</button>
+        <button class="btn btn-green btn-sm" onclick="dlXLSX('AS')"><i class="ti ti-download"></i> xlsx AS</button>
+        <button class="btn btn-purple btn-sm" onclick="openRekap()"><i class="ti ti-brand-whatsapp"></i> Rekap WA</button>
+        <button class="btn btn-teal btn-sm" onclick="exportState()"><i class="ti ti-share"></i> Kirim Data</button>
+        <label for="muatDataFileStatic" class="btn btn-indigo btn-sm" style="cursor:pointer"><i class="ti ti-folder-open"></i> Muat Data</label>
+      </div>
+    </div>
+    <div class="tab-bar">
+      ${[['input','✏️ Input Data'],['am','📋 Tabel AM'],['as','📋 Tabel AS'],['his','🎯 HIS & TGT']].map(([t,l])=>`<button class="tab ${S.tab===t?'active':''}" onclick="S.tab='${t}';save();render()">${l}</button>`).join('')}
+    </div>
+    ${S.tab==='input'?renderInput(slot):''}
+    ${S.tab==='am'?renderViewAM(slot):''}
+    ${S.tab==='as'?renderViewAS(slot):''}
+    ${S.tab==='his'?renderHisTgt():''}
+  `;
+}
+
+window.handleXLSXUpload=handleXLSXUpload;window.downloadImg=downloadImg;
+window.dlXLSX=dlXLSX;window.openRekap=openRekap;window.closeRekap=closeRekap;
+window.copyRekap=copyRekap;window.exportState=exportState;window.importState=importState;
+window.S=S;window.save=save;
+document.getElementById('muatDataFileStatic').addEventListener('change',function(){
+  if(this.files&&this.files[0]){importState(this.files[0]);}
+  this.value='';
+});
+render();
+</script>
+</body>
+</html>
