@@ -3,1103 +3,942 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Realtime Sales — Depo Lombok</title>
+<title>Direktori Layout Toko</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.11.0/dist/tabler-icons.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 <style>
-:root{
-  --bg:#0f1117;--bg2:#181c27;--bg3:#1e2333;--bg4:#252a3a;
-  --border:#2e3448;--border2:#3a4060;
-  --text:#e8eaf2;--text2:#9ba3bf;--text3:#5a6380;
-  --blue:#4f8ef7;--blue2:#3a75e0;--blue-dim:rgba(79,142,247,.12);
-  --green:#34c77b;--green-dim:rgba(52,199,123,.12);
-  --red:#f05252;--red-dim:rgba(240,82,82,.12);
-  --amber:#f59e0b;--amber-dim:rgba(245,158,11,.12);
-  --purple:#a78bfa;--purple-dim:rgba(167,139,250,.12);
-  --teal:#2dd4bf;--teal-dim:rgba(45,212,191,.12);
-  --radius:10px;--radius-sm:6px;--radius-lg:14px;
-  --shadow:0 4px 24px rgba(0,0,0,.35);
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh}
-.app{padding:14px;max-width:1200px;margin:0 auto}
+  :root{
+    --ink:#16232E; --ink-soft:#4A6178; --paper:#F3F0E8; --paper-card:#FFFFFF;
+    --line:#D8D3C4; --amber:#E8A33D; --amber-dark:#8A5A15;
+    --teal:#2F8F72; --teal-dark:#1C5B47; --red:#C1483D; --red-dark:#7C2A22;
+    --navy:#1B2A41; --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--paper);
+    background-image:linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size:64px 64px; background-attachment:fixed;
+    color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:44px 24px 80px;}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.12em;
+    color:var(--amber-dark);text-transform:uppercase;display:flex;align-items:center;gap:8px;
+  }
+  .eyebrow::before{content:"";width:20px;height:2px;background:var(--amber);display:inline-block;}
+  h1{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:42px;margin:6px 0 8px;color:var(--navy);}
+  .sub{color:var(--ink-soft);font-size:14.5px;line-height:1.6;max-width:60ch;}
 
-/* HEADER */
-.header{
-  background:linear-gradient(135deg,#1a2340 0%,#0f1a35 50%,#151d35 100%);
-  border:1px solid var(--border);border-radius:var(--radius-lg);
-  padding:14px 18px;margin-bottom:12px;
-  display:flex;align-items:center;justify-content:space-between;
-  flex-wrap:wrap;gap:10px;box-shadow:var(--shadow);
-  position:relative;overflow:hidden;
-}
-.header::before{
-  content:'';position:absolute;top:-40px;right:-40px;
-  width:160px;height:160px;
-  background:radial-gradient(circle,rgba(79,142,247,.15) 0%,transparent 70%);
-  border-radius:50%;
-}
-.header-left h1{font-size:16px;font-weight:700;color:#fff;letter-spacing:-.3px}
-.header-left p{font-size:11px;color:var(--text2);margin-top:3px;display:flex;align-items:center;gap:5px}
-.live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.header-right{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+  /* ---- filter bar ---- */
+  .filters{
+    display:flex;gap:10px;flex-wrap:wrap;margin:28px 0 20px;
+    background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px;
+  }
+  .filters input[type=text]{
+    flex:1 1 220px;border:1px solid var(--line);border-radius:7px;padding:9px 12px;
+    font-family:'Inter',sans-serif;font-size:14px;background:var(--paper);color:var(--ink);
+  }
+  .filters select{
+    border:1px solid var(--line);border-radius:7px;padding:9px 10px;
+    font-family:'JetBrains Mono',monospace;font-size:12.5px;background:var(--paper);color:var(--ink);
+  }
+  .filters input:focus, .filters select:focus{outline:2px solid var(--amber);outline-offset:1px;}
 
-/* TIME SELECT */
-.time-sel{
-  padding:6px 10px;border-radius:var(--radius-sm);
-  border:1px solid var(--border2);background:var(--bg3);
-  font-size:12px;font-family:'Inter',sans-serif;color:var(--text);cursor:pointer;transition:.15s;
-}
-.time-sel:focus{outline:none;border-color:var(--blue)}
+  .result-count{
+    font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-soft);
+    margin-bottom:10px;letter-spacing:.03em;
+  }
+  .result-count b{color:var(--ink);}
 
-/* BUTTONS */
-.btn{
-  padding:6px 12px;border-radius:var(--radius-sm);border:1px solid transparent;
-  font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;font-weight:500;
-  transition:all .15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
-}
-.btn i{font-size:13px}
-.btn-blue{background:var(--blue);color:#fff;border-color:var(--blue)}
-.btn-blue:hover{background:var(--blue2);border-color:var(--blue2)}
-.btn-green{background:rgba(52,199,123,.2);color:var(--green);border-color:rgba(52,199,123,.35)}
-.btn-green:hover{background:rgba(52,199,123,.3)}
-.btn-amber{background:rgba(245,158,11,.2);color:var(--amber);border-color:rgba(245,158,11,.35)}
-.btn-amber:hover{background:rgba(245,158,11,.3)}
-.btn-purple{background:var(--purple-dim);color:var(--purple);border-color:rgba(167,139,250,.35)}
-.btn-purple:hover{background:rgba(167,139,250,.25)}
-.btn-teal{background:var(--teal-dim);color:var(--teal);border-color:rgba(45,212,191,.35)}
-.btn-teal:hover{background:rgba(45,212,191,.25)}
-.btn-indigo{background:rgba(99,102,241,.2);color:#818cf8;border-color:rgba(99,102,241,.35)}
-.btn-indigo:hover{background:rgba(99,102,241,.3)}
-.btn-ghost{background:var(--bg3);color:var(--text2);border-color:var(--border)}
-.btn-ghost:hover{background:var(--bg4);color:var(--text)}
-.btn-sm{padding:4px 9px;font-size:11px}
-.btn-sm i{font-size:12px}
+  /* ---- store list ---- */
+  .store-list{display:flex;flex-direction:column;gap:8px;}
+  .store-row{
+    display:flex;align-items:center;gap:14px;
+    background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:13px 16px;cursor:pointer;transition:border-color .12s ease, transform .12s ease;
+  }
+  .store-row:hover{border-color:var(--amber);transform:translateX(2px);}
+  .kode-chip{
+    font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;
+    background:var(--navy);color:var(--amber);padding:5px 9px;border-radius:6px;flex-shrink:0;min-width:52px;text-align:center;
+  }
+  .store-info{flex:1;min-width:0;}
+  .store-nama{font-weight:500;font-size:14.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .store-meta{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-soft);margin-top:3px;}
+  .store-meta span{margin-right:12px;}
+  .badge-count{
+    font-family:'JetBrains Mono',monospace;font-size:11px;flex-shrink:0;
+    padding:4px 9px;border-radius:20px;white-space:nowrap;
+  }
+  .badge-count.has{background:#E8F5EF;color:var(--teal-dark);}
+  .badge-count.none{background:var(--paper);color:var(--ink-soft);border:1px solid var(--line);}
+  .chev{color:var(--ink-soft);flex-shrink:0;}
+  .chev svg{width:16px;height:16px;stroke:currentColor;}
 
-/* TAB BAR */
-.tab-bar{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:4px}
-.tab{padding:7px 16px;border-radius:var(--radius-sm);border:none;background:transparent;font-size:12px;font-weight:500;cursor:pointer;color:var(--text2);transition:all .15s;font-family:'Inter',sans-serif;}
-.tab.active{background:var(--blue);color:#fff;box-shadow:0 2px 8px rgba(79,142,247,.3)}
-.tab:hover:not(.active){background:var(--bg3);color:var(--text)}
+  .empty{text-align:center;padding:44px 20px;color:var(--ink-soft);}
+  .empty svg{width:30px;height:30px;stroke:var(--line);margin-bottom:10px;}
+  .empty p{font-size:13.5px;margin:0;}
 
-/* CARD */
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.2);}
-.card-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.card-title{font-size:13px;font-weight:600;color:var(--text)}
-.card-hdr .spacer{margin-left:auto}
-.card-body{padding:12px 16px}
+  /* ---- detail view ---- */
+  .back-btn{
+    display:inline-flex;align-items:center;gap:6px;
+    font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-soft);
+    background:none;border:none;cursor:pointer;padding:0;margin-bottom:18px;
+  }
+  .back-btn:hover{color:var(--ink);}
+  .back-btn svg{width:13px;height:13px;stroke:currentColor;}
 
-/* BADGES */
-.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:.3px}
-.badge-blue{background:var(--blue-dim);color:var(--blue);border:1px solid rgba(79,142,247,.25)}
-.badge-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(52,199,123,.25)}
-.badge-amber{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(245,158,11,.25)}
-.badge-purple{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,.25)}
-.badge-red{background:var(--red-dim);color:var(--red);border:1px solid rgba(240,82,82,.25)}
+  .dossier{
+    background:var(--paper-card);border:1px solid var(--line);border-radius:14px;
+    padding:22px 24px;margin-bottom:24px;
+  }
+  .dossier-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  .dossier-kode{
+    font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--amber-dark);
+    letter-spacing:.08em;text-transform:uppercase;
+  }
+  .dossier-nama{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:30px;color:var(--navy);margin:4px 0 0;}
+  .dossier-grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:14px;
+    margin-top:18px;padding-top:16px;border-top:1px solid var(--line);
+  }
+  .dossier-field label{
+    display:block;font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink-soft);
+    text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;
+  }
+  .dossier-field .val{font-size:14px;font-weight:500;color:var(--ink);}
 
-/* STAT CARDS */
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;padding:14px 16px}
-.stat{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;transition:.15s}
-.stat:hover{border-color:var(--border2)}
-.stat-lbl{font-size:10px;color:var(--text3);font-weight:500;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
-.stat-val{font-size:18px;font-weight:700;color:var(--text);letter-spacing:-.5px}
-.stat-sub{font-size:10px;color:var(--text3);margin-top:3px}
+  /* dropzone (shared style) */
+  .dock{
+    position:relative;border:2px dashed var(--ink-soft);border-radius:14px;background:var(--paper-card);
+    padding:34px 24px;text-align:center;cursor:pointer;transition:border-color .15s ease, background .15s ease;
+  }
+  .dock.drag{border-color:var(--amber);background:#FFF8EB;}
+  .dock-icon{width:46px;height:46px;margin:0 auto 12px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;}
+  .dock-icon svg{width:21px;height:21px;stroke:var(--amber);}
+  .dock-title{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:19px;color:var(--navy);}
+  .dock-desc{color:var(--ink-soft);font-size:13px;margin-top:4px;}
+  .dock-desc b{color:var(--ink);font-weight:600;}
+  input[type=file]{display:none;}
+  .progress{height:3px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:14px;display:none;}
+  .progress.active{display:block;}
+  .progress-bar{height:100%;width:0%;background:var(--amber);transition:width .15s ease;}
 
-/* TABLES */
-.table-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:12px}
-thead tr{background:linear-gradient(180deg,#1e2d52 0%,#182344 100%)}
-th{padding:9px 10px;text-align:center;font-weight:600;white-space:nowrap;font-size:10.5px;color:#c5d3f5;letter-spacing:.3px;border-bottom:1px solid #2a3a6e;position:sticky;top:0;}
-td{padding:8px 10px;border-bottom:1px solid rgba(46,52,72,.6);text-align:right;white-space:nowrap;color:var(--text2);font-size:11.5px}
-td.l{text-align:left}td.c{text-align:center}
-tbody tr{transition:.1s}
-tbody tr:hover td{background:rgba(79,142,247,.05);color:var(--text)}
-tbody tr:last-child td{border-bottom:none}
-tr.tot-row td{background:rgba(79,142,247,.08);color:var(--text);font-weight:600;border-top:1px solid rgba(79,142,247,.2)}
+  .status-row{
+    display:flex;justify-content:space-between;align-items:center;margin:26px 0 12px;
+    font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-soft);letter-spacing:.04em;
+  }
+  .status-row .count{color:var(--ink);font-weight:500;}
+  .refresh-btn{
+    background:none;border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer;
+    color:var(--ink-soft);font-family:'JetBrains Mono',monospace;font-size:11px;display:flex;align-items:center;gap:5px;
+  }
+  .refresh-btn:hover{border-color:var(--ink-soft);color:var(--ink);}
+  .refresh-btn svg{width:12px;height:12px;stroke:currentColor;}
 
-/* RANK BADGE */
-.rnk{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--blue2));color:#fff;font-size:10px;font-weight:700;box-shadow:0 2px 6px rgba(79,142,247,.3);}
-.rnk-1{background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 2px 8px rgba(245,158,11,.4)}
-.rnk-2{background:linear-gradient(135deg,#94a3b8,#64748b);box-shadow:0 2px 6px rgba(148,163,184,.3)}
-.rnk-3{background:linear-gradient(135deg,#cd7c2f,#a05c1f);box-shadow:0 2px 6px rgba(205,124,47,.3)}
+  .manifest{display:flex;flex-direction:column;gap:10px;}
+  .tag{
+    position:relative;display:flex;align-items:center;gap:14px;background:var(--paper-card);
+    border:1px solid var(--line);border-radius:var(--radius);padding:14px 18px 14px 14px;
+    animation:rise .25s ease both;
+  }
+  @keyframes rise{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:none;}}
+  .thumb{width:44px;height:44px;border-radius:6px;flex-shrink:0;background:var(--navy);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .thumb img{width:100%;height:100%;object-fit:cover;}
+  .thumb svg{width:20px;height:20px;stroke:var(--amber);}
+  .meta{flex:1;min-width:0;}
+  .fname{font-weight:500;font-size:14.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .fsub{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-soft);margin-top:3px;}
+  .actions{display:flex;gap:6px;flex-shrink:0;}
+  .actions a, .actions button{
+    width:32px;height:32px;border-radius:7px;border:1px solid var(--line);background:transparent;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink-soft);text-decoration:none;
+  }
+  .actions a:hover{border-color:var(--teal);color:var(--teal-dark);}
+  .actions button:hover{border-color:var(--red);color:var(--red-dark);}
+  .actions svg{width:15px;height:15px;stroke:currentColor;}
 
-/* ACV BADGES */
-.acv-h{background:rgba(52,199,123,.2);color:var(--green);padding:2px 6px;border-radius:4px;font-size:10.5px;font-weight:600;border:1px solid rgba(52,199,123,.3)}
-.acv-m{background:rgba(245,158,11,.2);color:var(--amber);padding:2px 6px;border-radius:4px;font-size:10.5px;font-weight:600;border:1px solid rgba(245,158,11,.3)}
-.acv-l{background:rgba(240,82,82,.2);color:var(--red);padding:2px 6px;border-radius:4px;font-size:10.5px;font-weight:600;border:1px solid rgba(240,82,82,.3)}
-.acv-n{color:var(--text3);font-size:11px}
-.g-pos{color:var(--green);font-weight:600}
-.g-neg{color:var(--red);font-weight:600}
-.du{color:var(--green);font-weight:600}
-.dd{color:var(--red);font-weight:600}
-.ds{color:var(--text3)}
+  .toast{
+    position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);
+    background:var(--navy);color:#fff;padding:11px 18px;border-radius:8px;font-size:13.5px;
+    display:flex;align-items:center;gap:8px;opacity:0;transition:opacity .2s ease, transform .2s ease;
+    pointer-events:none;z-index:50;font-family:'Inter',sans-serif;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast.err{background:var(--red-dark);}
+  .toast.ok{background:var(--teal-dark);}
 
-/* INPUTS */
-textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg3);font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text);resize:vertical;line-height:1.6;transition:.15s;}
-textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(79,142,247,.12)}
-textarea::placeholder{color:var(--text3)}
-.inp{width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg3);font-size:11px;font-family:'Inter',sans-serif;color:var(--text);transition:.15s;}
-.inp:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(79,142,247,.12)}
-input[type=number]::-webkit-inner-spin-button{opacity:.4}
+  footer{margin-top:44px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-soft);}
+  .view{display:none;}
+  .view.active{display:block;}
 
-/* UPLOAD ZONE */
-.upload-zone{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg3);}
-.upload-zone:hover{border-color:var(--blue);background:var(--blue-dim)}
-.upload-zone .uz-icon{font-size:28px;color:var(--blue);margin-bottom:8px}
-.upload-zone p{font-size:12px;color:var(--text2);line-height:1.5}
-.upload-zone small{font-size:10px;color:var(--text3)}
+  .storage-banner{
+    display:none;align-items:center;gap:10px;
+    background:#FDF1EC;border:1px solid #E9C2AE;border-radius:9px;
+    padding:11px 14px;margin-bottom:20px;font-size:13px;color:var(--red-dark);line-height:1.5;
+  }
+  .storage-banner.show{display:flex;}
+  .storage-banner svg{width:18px;height:18px;stroke:var(--red-dark);flex-shrink:0;}
 
-/* INPUT GRID */
-.as-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px}
-.as-blk{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px}
-.as-blk-t{font-size:11px;font-weight:600;margin-bottom:8px;color:var(--text2);display:flex;align-items:center;gap:6px}
-.as-blk-t::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green)}
+  .master-panel{
+    background:var(--paper-card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  }
+  .master-title{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:16px;color:var(--navy);}
+  .master-sub{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-soft);margin-top:2px;}
+  .master-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .ghost-btn{
+    display:inline-flex;align-items:center;gap:6px;
+    border:1px solid var(--line);background:var(--paper);border-radius:7px;
+    padding:8px 12px;cursor:pointer;font-family:'Inter',sans-serif;font-size:12.5px;color:var(--ink);
+  }
+  .ghost-btn:hover{border-color:var(--amber);}
+  .ghost-btn svg{width:14px;height:14px;stroke:currentColor;}
+  .ghost-btn.danger:hover{border-color:var(--red);color:var(--red-dark);}
+  /* ---- quick preview panel (auto-shown on store open if layout exists) ---- */
+  .quick-preview{
+    background:var(--paper-card);border:1px solid var(--line);border-radius:14px;
+    margin-bottom:20px;overflow:hidden;
+  }
+  .qp-head{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:12px 16px;border-bottom:1px solid var(--line);
+  }
+  .qp-title{
+    font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ink-soft);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .qp-title b{color:var(--ink);font-family:'Inter',sans-serif;font-size:13.5px;font-weight:500;}
+  .qp-body{
+    background:#20242b;min-height:220px;max-height:460px;display:flex;
+    align-items:center;justify-content:center;overflow:auto;cursor:zoom-in;
+  }
+  .qp-body img{max-width:100%;max-height:460px;display:block;object-fit:contain;}
+  .qp-body canvas{max-width:100%;max-height:460px;display:block;margin:0 auto;background:#fff;}
 
-/* HIS TABLE */
-.his-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px}
-.his-blk{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px}
-.his-blk-t{font-size:11px;font-weight:600;margin-bottom:10px;color:var(--text)}
-.his-table{width:100%;border-collapse:collapse;font-size:11px}
-.his-table th{color:var(--text3);padding:6px 8px;text-align:left;font-weight:600;font-size:10px;border-bottom:1px solid var(--border);letter-spacing:.4px;text-transform:uppercase}
-.his-table td{padding:5px 7px;border-bottom:1px solid rgba(46,52,72,.4)}
-.his-table tr:last-child td{border-bottom:none}
+  /* ---- fullscreen viewer modal ---- */
+  .viewer-overlay{
+    position:fixed;inset:0;background:rgba(15,20,26,.88);z-index:80;
+    display:none;align-items:center;justify-content:center;padding:26px;
+  }
+  .viewer-overlay.show{display:flex;}
+  .viewer-box{
+    background:#fff;border-radius:12px;max-width:min(1100px,94vw);max-height:92vh;
+    width:100%;display:flex;flex-direction:column;overflow:hidden;
+  }
+  .viewer-head{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+    padding:12px 16px;border-bottom:1px solid var(--line);flex-shrink:0;
+  }
+  .viewer-title{font-weight:500;font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .viewer-actions{display:flex;gap:8px;flex-shrink:0;}
+  .viewer-body{flex:1;overflow:auto;background:#20242b;display:flex;align-items:center;justify-content:center;}
+  .viewer-body img{max-width:100%;max-height:82vh;display:block;margin:auto;}
+  .viewer-body canvas{max-width:100%;max-height:82vh;display:block;margin:0 auto;background:#fff;}
+  .pdf-loading{color:#c9d3dc;font-size:13px;padding:28px 20px;text-align:center;line-height:1.6;}
+  .pdf-loading a{color:var(--amber);}
+  .pdf-pagenote{color:#9aa7b4;font-size:11px;text-align:center;padding:8px 0 2px;font-family:'JetBrains Mono',monospace;}
 
-/* SLOT PILLS */
-.slot-pills{display:flex;gap:6px;flex-wrap:wrap;padding:10px 16px}
-.slot-pill{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg3);font-size:11px;font-weight:500;cursor:pointer;color:var(--text2);transition:.15s;font-family:'Inter',sans-serif;}
-.slot-pill.active{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 2px 8px rgba(79,142,247,.3)}
-.slot-pill:hover:not(.active){border-color:var(--border2);background:var(--bg4)}
+  /* ---- manifest items clickable to preview ---- */
+  .tag{cursor:pointer;}
+  .tag:hover{border-color:var(--amber);}
 
-/* INFO BOX */
-.info-box{background:var(--blue-dim);border:1px solid rgba(79,142,247,.2);border-radius:var(--radius-sm);padding:8px 12px;font-size:11px;color:var(--text2);margin:0 16px 12px;display:flex;align-items:flex-start;gap:7px;}
-.info-box i{color:var(--blue);flex-shrink:0;margin-top:1px}
-
-/* EMPTY STATE */
-.empty-state{padding:40px 20px;text-align:center;color:var(--text3)}
-.empty-state i{font-size:36px;display:block;margin-bottom:10px;opacity:.4}
-.empty-state p{font-size:13px}
-
-/* BTN ROW */
-.btn-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:0 16px 14px}
-
-/* MODAL */
-.rekap-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:9999;align-items:center;justify-content:center}
-.rekap-modal.open{display:flex}
-.rekap-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);width:min(440px,94vw);max-height:88vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5);}
-.rekap-hdr{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.rekap-hdr span{font-size:14px;font-weight:600;color:var(--text)}
-.rekap-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--text3);line-height:1;padding:2px 6px;border-radius:4px;transition:.15s}
-.rekap-close:hover{background:var(--bg3);color:var(--text)}
-.rekap-body{padding:14px 18px;overflow-y:auto;flex:1}
-.rekap-txt{width:100%;min-height:220px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg3);font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--text);resize:vertical;line-height:1.8}
-.rekap-foot{padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
-.copy-flash{animation:cpflash .6s ease}
-@keyframes cpflash{0%{background:var(--green)}100%{background:var(--blue)}}
-
-/* EXPORT STYLES (Hitam pekat) */
-#export-am,#export-as,#export-combined{display:none}
-.exp-wrap{background:#fff;font-family:Arial,sans-serif;padding:20px 20px 20px 20px;color:#000;display:inline-block;min-width:100%}
-.exp-title{font-size:17px;font-weight:bold;color:#000;margin-bottom:2px}
-.exp-sub{font-size:13px;color:#000;margin-bottom:3px}
-.exp-by{font-size:13px;font-weight:700;margin-bottom:10px;color:#1e4fa0}
-.exp-table{border-collapse:collapse;font-size:13px;table-layout:auto}
-.exp-table th{background:#1e3a8a;color:#fff;padding:8px 12px;text-align:center;font-weight:700;border:1px solid #1e3070;white-space:nowrap}
-.exp-table td{padding:6px 12px;border:1px solid #94a3b8;text-align:right;white-space:nowrap;color:#000}
-.exp-table td.el{text-align:left}
-.exp-table td.ec{text-align:center}
-.exp-table tr:nth-child(even) td{background:#f8faff}
-.exp-table tr.tot td{background:#e8f0fe;font-weight:bold;border-top:2px solid #1e3a8a}
-.exp-acv-h{background:#16a34a;color:#fff;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:700}
-.exp-acv-m{background:#d97706;color:#fff;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:700}
-.exp-acv-l{background:#dc2626;color:#fff;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:700}
-.exp-rank{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#1e3a8a;color:#fff;font-size:11px;font-weight:700}
-
-@media(max-width:560px){
-  .as-grid,.his-grid{grid-template-columns:1fr}
-  .header{padding:12px 14px}
-  .stats-grid{grid-template-columns:1fr 1fr}
-}
+  @media(max-width:520px){
+    h1{font-size:32px;}
+    .wrap{padding:30px 16px 60px;}
+    .store-meta span{display:block;margin-bottom:2px;}
+    .dossier-nama{font-size:24px;}
+  }
 </style>
 </head>
 <body>
-<div class="app" id="root"></div>
-<div id="export-am"></div><div id="export-as"></div><div id="export-combined"></div>
-<input type="file" id="muatDataFileStatic" accept=".json" style="display:none">
+<div class="wrap">
 
-<!-- MODAL MUAT DATA -->
-<div id="muatModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);z-index:9999;align-items:center;justify-content:center;flex-direction:column" onclick="if(event.target===this)closeMuatModal()">
-  <div style="background:#1e2333;border:1px solid #3a4060;border-radius:14px;width:min(500px,94vw);padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.5)">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <span style="font-size:14px;font-weight:600;color:#e8eaf2">📂 Muat Data</span>
-      <button onclick="closeMuatModal()" style="background:none;border:none;color:#9ba3bf;font-size:20px;cursor:pointer;line-height:1;padding:2px 6px;border-radius:4px">✕</button>
+  <!-- ============ VIEW: LIST ============ -->
+  <div class="view active" id="viewList">
+    <div class="eyebrow">Direktori toko · arsip bersama</div>
+    <h1>Layout toko</h1>
+    <p class="sub">Cari toko berdasarkan kode, nama, AS, AM, atau kabupaten. Klik satu toko untuk upload atau melihat layout yang sudah tersimpan.</p>
+
+    <div class="storage-banner" id="storageBanner">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/></svg>
+      <span id="storageBannerText">Tidak bisa terhubung ke server penyimpanan bersama. Cek koneksi internet, lalu coba lagi.</span>
+      <button id="retryStorageBtn" class="ghost-btn" style="flex-shrink:0;">Coba lagi</button>
     </div>
-    <p style="font-size:12px;color:#9ba3bf;margin-bottom:10px">Buka file <b style="color:#e8eaf2">.json</b> hasil "Kirim Data" dengan Notepad, lalu <b style="color:#e8eaf2">Ctrl+A → Ctrl+C</b>, kemudian paste di sini:</p>
-    <textarea id="muatTxt" style="width:100%;min-height:140px;padding:10px;border:1px solid #3a4060;border-radius:8px;background:#0f1117;color:#e8eaf2;font-size:11px;font-family:monospace;resize:vertical;line-height:1.5" placeholder='{"tab":"input","data":{...}}'></textarea>
-    <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end">
-      <button onclick="closeMuatModal()" style="padding:7px 14px;border-radius:6px;border:1px solid #3a4060;background:#252a3a;color:#9ba3bf;font-size:12px;cursor:pointer">Batal</button>
-      <button onclick="importFromText(document.getElementById('muatTxt').value)" style="padding:7px 16px;border-radius:6px;border:none;background:#4f8ef7;color:#fff;font-size:12px;font-weight:600;cursor:pointer">✅ Muat Data</button>
+    <div class="storage-note" id="storageNote" style="display:flex;align-items:center;gap:8px;background:#EAF3FF;border:1px solid #C6DDF5;border-radius:9px;padding:9px 14px;margin-bottom:16px;font-size:12.5px;color:#2B5B8A;">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;stroke:currentColor;flex-shrink:0;"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <span>Data toko &amp; layout tersimpan bersama di server — siapa pun yang buka link ini melihat data yang sama, real-time.</span>
     </div>
+
+    <div class="master-panel">
+      <div>
+        <div class="master-title">Daftar toko</div>
+        <div class="master-sub" id="masterSourceInfo">Memuat sumber data…</div>
+      </div>
+      <div class="master-actions">
+        <button class="ghost-btn" id="uploadMasterBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+          Unggah daftar toko baru
+        </button>
+        <button class="ghost-btn danger" id="resetMasterBtn" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          Kembalikan ke daftar bawaan
+        </button>
+        <input type="file" id="masterFileInput" accept=".xlsx,.xls,.csv" style="display:none">
+      </div>
+    </div>
+
+    <div class="filters">
+      <input type="text" id="searchInput" placeholder="Cari kode toko atau nama toko…">
+      <select id="filterAM"><option value="">Semua AM</option></select>
+      <select id="filterAS"><option value="">Semua AS</option></select>
+      <select id="filterKab"><option value="">Semua kabupaten</option></select>
+    </div>
+
+    <div class="result-count"><b id="resultCount">0</b> toko ditemukan</div>
+    <div class="store-list" id="storeList"></div>
+  </div>
+
+  <!-- ============ VIEW: DETAIL ============ -->
+  <div class="view" id="viewDetail">
+    <button class="back-btn" id="backBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Kembali ke daftar toko
+    </button>
+
+    <div class="dossier">
+      <div class="dossier-top">
+        <div>
+          <div class="dossier-kode" id="dKode">TXXX</div>
+          <div class="dossier-nama" id="dNama">Nama toko</div>
+        </div>
+      </div>
+      <div class="dossier-grid">
+        <div class="dossier-field"><label>AS</label><div class="val" id="dAS">-</div></div>
+        <div class="dossier-field"><label>AM</label><div class="val" id="dAM">-</div></div>
+        <div class="dossier-field"><label>Kabupaten / kota</label><div class="val" id="dKab">-</div></div>
+      </div>
+    </div>
+
+    <div class="quick-preview" id="quickPreview" style="display:none;">
+      <div class="qp-head">
+        <div class="qp-title" id="qpTitle">-</div>
+        <div class="qp-actions">
+          <button class="ghost-btn" id="qpExpandBtn" title="Perbesar">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+            Perbesar
+          </button>
+        </div>
+      </div>
+      <div class="qp-body" id="qpBody"></div>
+    </div>
+
+    <div class="dock" id="dock">
+      <div class="dock-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+      </div>
+      <div class="dock-title">Tarik file ke sini, atau klik untuk pilih</div>
+      <div class="dock-desc">Format diterima: <b>PDF, JPG, JPEG, PNG</b> · maksimal <b>2.8 MB</b> per file</div>
+      <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" multiple>
+      <div class="progress" id="progress"><div class="progress-bar" id="progressBar"></div></div>
+    </div>
+
+    <div class="status-row">
+      <span><span class="count" id="fileCount">0</span> layout tersimpan untuk toko ini</span>
+      <button class="refresh-btn" id="refreshBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+        Segarkan
+      </button>
+    </div>
+
+    <div class="manifest" id="manifest"></div>
+  </div>
+
+  <footer>Layout Toko Archive — penyimpanan bersama, tanpa login</footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="viewer-overlay" id="viewerOverlay">
+  <div class="viewer-box">
+    <div class="viewer-head">
+      <div class="viewer-title" id="viewerTitle">-</div>
+      <div class="viewer-actions">
+        <a id="viewerDownload" class="ghost-btn" title="Unduh" download>
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+          Unduh
+        </a>
+        <button class="ghost-btn" id="viewerClose" title="Tutup">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          Tutup
+        </button>
+      </div>
+    </div>
+    <div class="viewer-body" id="viewerBody"></div>
   </div>
 </div>
 
-<div class="rekap-modal" id="rekapModal" onclick="if(event.target===this)closeRekap()">
-  <div class="rekap-box">
-    <div class="rekap-hdr">
-      <span>📋 Rekap WhatsApp</span>
-      <button class="rekap-close" onclick="closeRekap()"><i class="ti ti-x"></i></button>
-    </div>
-    <div class="rekap-body"><textarea class="rekap-txt" id="rekapTxt" readonly></textarea></div>
-    <div class="rekap-foot">
-      <button class="btn btn-ghost btn-sm" onclick="closeRekap()">Tutup</button>
-      <button class="btn btn-blue btn-sm" id="copyBtn" onclick="copyRekap()"><i class="ti ti-copy"></i> Copy Teks</button>
-    </div>
-  </div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-/* ============================================================
-   MAPPING & CONSTANTS
-============================================================ */
-const AM_MAP={'EWO':'EWY'};
+const DEFAULT_STORES = [{"kode":"TSF8","nama":"PEJANGGIK MATARAM","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TFLH","nama":"SRIWIJAYA","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TU3E","nama":"LANGKO","as":"IMS","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TY27","nama":"ADI SUCIPTO","as":"ARF","am":"TSA","kab":"KOTA MATARAM"},{"kode":"T1FO","nama":"HASANUDIN","as":"IMS","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TYNG","nama":"CATUR WARGA","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"T92V","nama":"DOKTER SUTOMO","as":"IMS","am":"TSA","kab":"KOTA MATARAM"},{"kode":"T7NW","nama":"FRESH DOKTER WAHIDIN","as":"MSI","am":"MYA","kab":"KOTA MATARAM"},{"kode":"T9KB","nama":"SANDUBAYA","as":"ASN","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TCMX","nama":"NARMADA","as":"RSR","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"T77C","nama":"PEJANGGIK 2","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TXEU","nama":"SALEH SUNGKAR","as":"ARF","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TV1M","nama":"BUNG KARNO","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TLDJ","nama":"SENGGIGI","as":"MSI","am":"MYA","kab":"LOMBOK BARAT"},{"kode":"T2GC","nama":"SRIWIJAYA 2","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TSPT","nama":"MAJAPAHIT","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TOR8","nama":"COKROAMINOTO","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TO3X","nama":"MAJAPAHIT 2","as":"ASN","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TAN8","nama":"SRIWIJAYA 3","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"T1XD","nama":"PEJANGGIK 3 MATARAM","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TXZC","nama":"HASANUDIN 2 MATARAM","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"T7K2","nama":"MANTANG","as":"RSR","am":"IRN","kab":"LOMBOK TENGAH"},{"kode":"TYE7","nama":"GAJAH MADA 2","as":"ASN","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TICK","nama":"FRESH PANJITILAR 2","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TDCJ","nama":"KOPANG","as":"RSR","am":"IRN","kab":"LOMBOK TENGAH"},{"kode":"TVQD","nama":"PEMUDA","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"T2R5","nama":"KOPERASI","as":"ARF","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TVCM","nama":"S PARMAN","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TBSN","nama":"LEMBAR","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TPMN","nama":"BY PASS BILL","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TLJ1","nama":"PARIWISATA","as":"IMS","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"TRMP","nama":"ADI SUCIPTO 2","as":"ARF","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TDEH","nama":"RUMAK LOMBOK BARAT","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TDEZ","nama":"LABUAPI","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"T7PS","nama":"RENTENG","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"T89V","nama":"NARMADA 2","as":"RSR","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TJYU","nama":"KH AHMAD DAHLAN","as":"ASN","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TIXI","nama":"KH DEWANTARA","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TDPC","nama":"JEMBATAN KEMBAR","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"T5IK","nama":"KURIPAN","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"FWW2","nama":"MUJUR PRAYA TIMUR","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TNPY","nama":"LABUHAN HAJI","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TIL1","nama":"PENUJAK","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TIPA","nama":"LINGSAR","as":"RSR","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TX5F","nama":"UBUNG LOMBOK TENGAH","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"T1LB","nama":"PAOK MOTONG","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"THB9","nama":"KOPANG 2","as":"RSR","am":"IRN","kab":"LOMBOK TENGAH"},{"kode":"T7JP","nama":"PEMEPEK","as":"RSR","am":"IRN","kab":"LOMBOK TENGAH"},{"kode":"TULJ","nama":"TANJUNG","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TIH7","nama":"SAKRA LOMBOK TIMUR","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TIDG","nama":"KERUAK","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TG7G","nama":"M YAMIN 47","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TO6C","nama":"M YAMIN 87","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TAXZ","nama":"CUT NYAK DIEN","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"T0FU","nama":"KELAYU","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TXHR","nama":"MASBAGIK","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TZTD","nama":"WANASABA","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"FGWU","nama":"LABUHAN LOMBOK","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"T9Y8","nama":"SAKRA KOTA","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TS8S","nama":"MENDAGI","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TJAJ","nama":"ABDUL MAJID 03","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TUTT","nama":"KUTA LOMBOK TENGAH","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TKKA","nama":"PRAPEN","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TCEA","nama":"MIDANG","as":"RDH","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"T50A","nama":"FRESH RAYA SENGGIGI","as":"MSI","am":"MYA","kab":"LOMBOK BARAT"},{"kode":"TERC","nama":"MELASE BATU LAYAR","as":"ARF","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"TERT","nama":"A YANI SUMBAWA BARAT","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"T1G1","nama":"PB SUDIRMAN","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"T0Z4","nama":"MALUK SUMBAWA BARAT","as":"MHS","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"TUZ0","nama":"LASAP TALIWANG","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"T2N2","nama":"PARAMPUAN","as":"ASN","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TION","nama":"INDUSTRI","as":"ARF","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TOTL","nama":"AA GEDE NGURAH","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TICI","nama":"RA KARTINI","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TIMS","nama":"AR HAKIM","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TNEO","nama":"LINTAS UTAN","as":"AMR","am":"AMI","kab":"SUMBAWA"},{"kode":"TUG0","nama":"PEKAT SUMBAWA","as":"WRN","am":"MLN","kab":"SUMBAWA"},{"kode":"TALH","nama":"BRANG BIJI","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"TCUQ","nama":"LEMPEH","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"T44M","nama":"VILLA SANDIK","as":"ARF","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"TMSS","nama":"NARMANDA 3","as":"RSR","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TBUX","nama":"CENDRAWASIH 2","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"TOWH","nama":"DIPONEGORO","as":"HAR","am":"MLN","kab":"SUMBAWA"},{"kode":"TRRM","nama":"ENERGI","as":"ARF","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TJJQ","nama":"TGH FAISAL MATARAM","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TTDJ","nama":"APITAIK","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TUKO","nama":"SELAPARANG","as":"ASN","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TOPO","nama":"RAYA TANJUNG","as":"IMS","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"TT6I","nama":"PEJANGGIK 2 LOMBOK TIMUR","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TAGU","nama":"BANJAR GETAS","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TSPP","nama":"RAYA TERARA","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"T0ZI","nama":"KUTA 2","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TW2W","nama":"PEJANGGIK 4 MATARAM","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TRRE","nama":"SULTAN KAHARUDIN 2","as":"HAR","am":"MLN","kab":"SUMBAWA"},{"kode":"TENI","nama":"PENDIDIKAN","as":"AMR","am":"AMI","kab":"SUMBAWA"},{"kode":"TIVY","nama":"MANGGIS 2","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"TODA","nama":"GARUDA 19","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"T22D","nama":"SRIWIJAYA 4","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TUN4","nama":"GARUDA 54","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"T1ON","nama":"RABERAS BUKIT","as":"HAR","am":"MLN","kab":"SUMBAWA"},{"kode":"TNII","nama":"HASANUDIN 2 SUMBAWA BESAR","as":"HAR","am":"MLN","kab":"SUMBAWA"},{"kode":"TMGO","nama":"PRINGGARATA","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TIK4","nama":"A YANI MATARAM","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"T0AK","nama":"MONTONG 2","as":"ARF","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"TJCO","nama":"DIPONEGORO KEKERI","as":"IMS","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"T0IM","nama":"BATUYANG","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TD0A","nama":"CATUR WARGA 3","as":"MSI","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TQES","nama":"RAYA RADEN PUGUH","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TXUX","nama":"JENDRAL SUDIRMAN","as":"IMS","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TULY","nama":"DARMAJI","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TM4M","nama":"KORLEKO","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TUIG","nama":"TGH FAISAL LOMBOK BARAT","as":"IWI","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TON5","nama":"RAYA MONTONG GAMANG","as":"RSR","am":"IRN","kab":"LOMBOK TENGAH"},{"kode":"TIMG","nama":"ABDUL MAJID 100","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TI0X","nama":"KOPANG 3","as":"RSR","am":"IRN","kab":"LOMBOK TENGAH"},{"kode":"TATO","nama":"POINT BANDARA LOMBOK 2","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TAZE","nama":"PARIWISATA 48","as":"ARF","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"TIEO","nama":"WISATA BENANG STOKEL","as":"RSR","am":"IRN","kab":"LOMBOK TENGAH"},{"kode":"TAQE","nama":"RENGSING","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TTAZ","nama":"EMPANG","as":"WRN","am":"MLN","kab":"SUMBAWA"},{"kode":"TA0N","nama":"TGH MANSYUR BAJUR","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TNOB","nama":"GAJAH MADA 89","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TAWG","nama":"RAYA LABUHAN LOMBOK KM 3","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TMAZ","nama":"DAREK LOMBOK TENGAH","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TMOU","nama":"LINGKAR SELATAN","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TEDX","nama":"FRESH BUNG HATTA","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TXXD","nama":"SENGKERANG","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TVAK","nama":"BUNG KARNO 3","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TUFM","nama":"SEMAYAN","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"FOAR","nama":"ADE IRMA","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TAR9","nama":"FRESH BY PASS BILL 4","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TXFB","nama":"UNTUNG SUROPATI","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"FAUB","nama":"SPBU SERUNI","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TIZ0","nama":"RAYA SENGGIGI KM 8","as":"ARF","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"T0VV","nama":"LEMBAR 2","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TN5A","nama":"KUTA 4","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TICG","nama":"MASBAGIK SARU","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TAHZ","nama":"SURALAGA","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TRYY","nama":"RAYA KAWO KM 2","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TKEO","nama":"JATISELA","as":"RDH","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"TIOH","nama":"TANJUNG LUAR","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TOLP","nama":"RAYA BAGIK BONTONG KM 1","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TDAN","nama":"SEGARA ANAK NO.11","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TAXE","nama":"RINJANI KM 1 LTM","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TUIB","nama":"ALAS DALAM","as":"AMR","am":"AMI","kab":"SUMBAWA"},{"kode":"TCRR","nama":"IRENG JAYA KM 2","as":"RDH","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"T144","nama":"RAYA SIKUR","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"T0F1","nama":"BY PASS BILL 468","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"T0IO","nama":"WISATA LEMOR KM 1","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TUD0","nama":"PENEDA GANDOR KM 5","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TIJA","nama":"SOEKARNO HATTA NO 16","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TJJG","nama":"MASBAGIK PRINGGASELA KM 1","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TXXR","nama":"SEMBALUN LAWANG KM 1","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"T11M","nama":"PARIWISATA NO 26 C","as":"ARF","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"TQQK","nama":"BUNG KARNO NO 8","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TEK2","nama":"ALAS BARAT","as":"AMR","am":"AMI","kab":"SUMBAWA"},{"kode":"TAMP","nama":"H. LALU HASYIM","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TEVU","nama":"KARANG DIMA","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"TAZS","nama":"SALEH SUNGKAR NO. 71 C","as":"ARF","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TELS","nama":"TGH LOPAN NO 21","as":"NDA","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TKLE","nama":"PRABU RANGKASARI 3","as":"MSI","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TOYY","nama":"ARYA BANJAR GETAS NO. 105","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TDFF","nama":"RINJANI NO 1","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TEMR","nama":"TGH IBRAHIM AL KHALIDY","as":"SAP","am":"MYA","kab":"LOMBOK BARAT"},{"kode":"TUEK","nama":"BONJERUK","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TI0B","nama":"RAYA KOPANG KM 1","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TUUB","nama":"TGH LOPAN NO 28","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TOOM","nama":"POINT PELABUHAN KAYANGAN","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TLYU","nama":"SETIA BUDI NO 14A","as":"HAR","am":"MLN","kab":"SUMBAWA"},{"kode":"TNNM","nama":"KI HAJAR DEWANTARA NO 40","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TUPG","nama":"PB SUDIRMAN GEGUTU","as":"IMS","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TYOS","nama":"YOS SUDARSO NO. 29","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"THNK","nama":"YOS SUDARSO NO. 90","as":"ARF","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TIOC","nama":"A YANI REVERSIDE NO 7","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TKEX","nama":"ISMAIL MARZUKI NO. 5A","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TDUV","nama":"LINTAS SUMBAWA BIMA KM 30","as":"WRN","am":"MLN","kab":"SUMBAWA"},{"kode":"TNEL","nama":"ISMAIL MARZUKI NO. 5D","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TKHH","nama":"BRAWIJAYA NO 25","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TCAF","nama":"KAMPUNG DALAM","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"TZZB","nama":"PARIWISATA NO. 29","as":"IMS","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"THID","nama":"PANJITILAR NO. 86","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TWEM","nama":"GAJAH MADA NO. 88 X","as":"ASN","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TWGO","nama":"DR SOETOMO NO. 22 BC","as":"IMS","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TTOF","nama":"GORA 1 NO 108","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TNEF","nama":"SRIWIJAYA NO. 8E","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TGRU","nama":"LINTAS SUMBAWA BIMA KM 4","as":"WRN","am":"MLN","kab":"SUMBAWA"},{"kode":"TRIW","nama":"ADI SUCIPTO NO. 7","as":"IMS","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TPID","nama":"RAYA MALUK NO. 143","as":"MHS","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"TERM","nama":"MALUK 2","as":"MHS","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"T19T","nama":"RAYA LABUHA POTO TANO","as":"AMR","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"TAGC","nama":"POINT RS SILOAM","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TGAS","nama":"RAYA SEKOTONG","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"T1L1","nama":"LINTAS SUMBAWA KM 19","as":"AMR","am":"AMI","kab":"SUMBAWA"},{"kode":"TAM0","nama":"TGH FAISAL KM1 MTM","as":"MSI","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TTK0","nama":"LINTAS SUMBAWA KM 7","as":"AMR","am":"AMI","kab":"SUMBAWA"},{"kode":"T2JW","nama":"GARUDA NO. 12","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"T82S","nama":"KERANGKA BAJA NO 6- SBS","as":"HAR","am":"MLN","kab":"SUMBAWA"},{"kode":"T2Z9","nama":"SULTAN KAHARUDIN NO 28 - SBS","as":"WRN","am":"MLN","kab":"SUMBAWA"},{"kode":"TLRM","nama":"PENDIDIKAN NO 127","as":"AMR","am":"AMI","kab":"SUMBAWA"},{"kode":"TQOK","nama":"PRABU RANGKASARI 151","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TYQW","nama":"PONDOK PESANTREN KM 3 - SBR","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"TBMS","nama":"SPBU MANDALIKA","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"FZ7Y","nama":"PEMUDA NO 28 - MTM","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"T6A2","nama":"MONTONG GAMANG GANTI KM 9","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TBGV","nama":"HASANUDIN NO 28 A SBS","as":"HAR","am":"MLN","kab":"SUMBAWA"},{"kode":"T1NL","nama":"RAYA AIK BUKAK KM 1","as":"RSR","am":"IRN","kab":"LOMBOK TENGAH"},{"kode":"TBGF","nama":"BATU HIJAU","as":"MHS","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"T0IA","nama":"LINTAS TALIWANG KM 1","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"TI8R","nama":"POINT BANDARA LOMBOK","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TCFS","nama":"PEJANGGIK NO 2 LOMBOK TIMUR","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"T3WM","nama":"RAYA POHGADING KM 1","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TAQN","nama":"RAYA LABUHAN LOMBOK KM.3","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TRNF","nama":"RAYA JENGGIK KM 34 - LTM","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"FJ09","nama":"TGH ZAINUDDIN ABDUL MAJID","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TYVW","nama":"LABUHAN BALAT KM.2-SBR","as":"MHS","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"T0UY","nama":"PAHLAWAN NO 16 - SBR","as":"MHS","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"T1V3","nama":"PARIWISATA SUELA KETANGGA","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"FAL3","nama":"RAYA ANJANI-LTM","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TUSV","nama":"PENDIDIKAN AIKMEL KM.1A-LTM","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TBG7","nama":"LINTAS SUMBAWA BIMA KM 212 A","as":"HAZ","am":"AMI","kab":"BIMA"},{"kode":"TTLD","nama":"BUKIT PERMAI KM. 2 - SUMBAWA","as":"HAR","am":"MLN","kab":"SUMBAWA"},{"kode":"T5NB","nama":"LINTAS DONGGO KM.1","as":"MYD","am":"MLN","kab":"BIMA"},{"kode":"T9KY","nama":"BUYA HAMKA-BIMA","as":"MYD","am":"MLN","kab":"BIMA"},{"kode":"TWGD","nama":"LINTAS SUMBAWA BIMA KM 215","as":"HAZ","am":"AMI","kab":"BIMA"},{"kode":"T07W","nama":"LINTAS NISA WOHA-BIMA","as":"HAZ","am":"AMI","kab":"BIMA"},{"kode":"TRYF","nama":"HASANUDIN NO.358 -LTM","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TGW2","nama":"AMIR HAMZAH - MTM","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TSY7","nama":"LINTAS TALABIU KM.1-BIMA","as":"MYD","am":"MLN","kab":"BIMA"},{"kode":"TYJP","nama":"I GUSTI JELANTIK GOSA-MTM","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TKUX","nama":"AKSES CIRCUIT MANDALIKA-LTH","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"FCFO","nama":"TGH UMAR-LTM","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TSAF","nama":"LINTAS TENTE GODO-BIMA","as":"HAZ","am":"AMI","kab":"BIMA"},{"kode":"TJC6","nama":"RAYA KUTA LOMBOK-LTH","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TGXA","nama":"LINTAS SUMBAWA KM 216-BIMA","as":"MYD","am":"MLN","kab":"BIMA"},{"kode":"TAUC","nama":"MOYO UTARA - SBS","as":"HAR","am":"MLN","kab":"SUMBAWA"},{"kode":"T3NS","nama":"RAYA SETELUK KM 1-SBR","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"TRF6","nama":"RAYA LANGAM-SBS","as":"WRN","am":"MLN","kab":"SUMBAWA"},{"kode":"TCZ6","nama":"BY PASS BILL VICTORY-LTH","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TR1Z","nama":"K.H HASYIM ASYIARI-LTM","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TG00","nama":"MAJAPAHIT RAYA-MTM","as":"ASN","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TVFP","nama":"RAYA SUKAMULIA-LTM","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TATG","nama":"RAYA LABANGKA KM 1 - SBS","as":"WRN","am":"MLN","kab":"SUMBAWA"},{"kode":"TWFM","nama":"KEBAYAN-SBS","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"TI26","nama":"RAYA LANGKO - MTM","as":"IMS","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TVW6","nama":"RAYA TALIWANG NO 5","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"THKD","nama":"RAYA SEKONGKANG NO 13-SBR","as":"MHS","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"T92I","nama":"GATOT SUBROTO SADIA - BIMA","as":"MYD","am":"MLN","kab":"KOTA BIMA"},{"kode":"TQRD","nama":"RAYA GERUNG - LBR","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TYJ4","nama":"BRIGTH BY SPBU L. SELATAN","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TJA7","nama":"SOEKARNO HATTA PARUGA","as":"HAZ","am":"AMI","kab":"KOTA BIMA"},{"kode":"TDI8","nama":"RAYA SETELUK KM.3B-SBR","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"T7AZ","nama":"RE MARTADINATA-BIMA","as":"HAZ","am":"AMI","kab":"KOTA BIMA"},{"kode":"TTPH","nama":"RAYA ANJANI KM 2-LTM","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TCPF","nama":"DATUK DIBANTA-KOTA BIMA","as":"MYD","am":"MLN","kab":"KOTA BIMA"},{"kode":"TGD0","nama":"GAJAH MADA - KOTA BIMA","as":"MYD","am":"MLN","kab":"KOTA BIMA"},{"kode":"TKFX","nama":"TUMPANG SARI - MTM","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TGHM","nama":"WOLTER MONGINSIDI SARAE","as":"HAZ","am":"AMI","kab":"KOTA BIMA"},{"kode":"TLPX","nama":"PENDIDIKAN 101 - LTM","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"T2YZ","nama":"SOEKARNO HATTA PENATOI-BIMA","as":"MYD","am":"MLN","kab":"KOTA BIMA"},{"kode":"TDX3","nama":"BUNDARAN KUTA-LTH","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"FYJ5","nama":"BASUKI RAHMAT-LTH","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TB6C","nama":"LINGKAR SELATAN NO 9 X-MTM","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TZNM","nama":"SEGARA ANAK KM.5-LTM","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"T82P","nama":"RAYA UTAN-SBS","as":"AMR","am":"AMI","kab":"SUMBAWA"},{"kode":"TPYZ","nama":"RAYA KERUAK KM.9-LTM","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"T7BO","nama":"RAYA MANGGIS-SBS","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"TZ8H","nama":"RAYA LABUHAN LOMBOK KM.1-LTM","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TOX8","nama":"HOS COKROAMINOTO-LTM","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TWLK","nama":"CENDRAWASIH KM.1-SBS","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"T46M","nama":"RAYA SAMBALIA-LTM","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TJS8","nama":"RAYA SERNU-SBS","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"T7IY","nama":"RAYA TANJUNG SELONG KM.4-LTM","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TQDW","nama":"LINTAS SUMBAWA TANO KM.33","as":"AMR","am":"AMI","kab":"SUMBAWA"},{"kode":"TSBP","nama":"BY PASS NIJANG KM.1-SUMBAWA","as":"WRN","am":"MLN","kab":"SUMBAWA"},{"kode":"TMNX","nama":"RAYA MARONGE - SBS","as":"WRN","am":"MLN","kab":"SUMBAWA"},{"kode":"TS2C","nama":"ZAINUDDIN ABDUL MAJID NO 145","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"F9SY","nama":"TGH MOH MUTAWALLI - LTM","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TZLC","nama":"RAYA TANJUNG 2-KLU","as":"MSI","am":"MYA","kab":"LOMBOK UTARA"},{"kode":"TGBB","nama":"SANDUBAYA NO 45-MTM","as":"ASN","am":"IRN","kab":"KOTA MATARAM"},{"kode":"T5ZE","nama":"BANGSAL BARU-KLU","as":"MSI","am":"MYA","kab":"LOMBOK UTARA"},{"kode":"TFDH","nama":"TGH ABDUL MUHIET ELLEFAQY","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TTG1","nama":"DARUL HIKMAH NO.1 - LBR","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TS1O","nama":"RAYA SEMBALUN-LTM","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TCGE","nama":"RAYA TERARA NO 16-LTM","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"T9O5","nama":"RAYA TANJUNG KM.9-KLU","as":"MSI","am":"MYA","kab":"LOMBOK UTARA"},{"kode":"TFZB","nama":"BUNG KARNO NO.7 - MTM","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TEZZ","nama":"RAYA KARTINI -SBS","as":"HAR","am":"MLN","kab":"SUMBAWA"},{"kode":"TF3I","nama":"RAYA GONDANG 2 - KLU","as":"IMS","am":"TSA","kab":"LOMBOK UTARA"},{"kode":"TS4B","nama":"MAJAPAHIT KEKALIK NO.83-MTM","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TS8K","nama":"RAYA BATUNYALA-LTH","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TENW","nama":"BRAWIJAYA NO.99-MTM","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TLCJ","nama":"GUNUNGSARI NO 3-LBR","as":"MSI","am":"MYA","kab":"LOMBOK BARAT"},{"kode":"TKLD","nama":"BAYAN ANYAR-KLU","as":"IMS","am":"TSA","kab":"LOMBOK UTARA"},{"kode":"T4AS","nama":"RAYA PEMENANG-KLU","as":"MSI","am":"MYA","kab":"LOMBOK UTARA"},{"kode":"TRHR","nama":"PANCA USAHA NO 25 -MTM","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"F7FX","nama":"BRIGHT BY IDM BUNG KARNO","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"FXCR","nama":"AHMAD DAHLAN","as":"ASN","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TQ4J","nama":"JENDRAL SUDIRMAN 1","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TH0O","nama":"PARIWISATA TOYA NO 36-LTM","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TAM2","nama":"LINTAS SUMBAWA BIMA KM 5-SBS","as":"WRN","am":"MLN","kab":"SUMBAWA"},{"kode":"TP5Z","nama":"PONDOK PESANTREN MENALA-SBR","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"TZMM","nama":"KOPERASI AIKMEL NO 124-LTM","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"FX3R","nama":"SRIWIJAYA-MTM","as":"ASN","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TEZF","nama":"SULTAN SALAHUDIN NO 9-MTM","as":"ASN","am":"IRN","kab":"KOTA MATARAM"},{"kode":"FBV8","nama":"BRIGHT BY IDM PAGESANGAN","as":"ASN","am":"IRN","kab":"KOTA MATARAM"},{"kode":"FW6I","nama":"RAYA TANJUNG LOMBOK UTARA","as":"RDH","am":"TSA","kab":"LOMBOK UTARA"},{"kode":"T6TT","nama":"RADEN ABDUL RAHMAN-LBR","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"T5Q6","nama":"SONOKELING DASAN GERIA-LBR","as":"IMS","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"T4Y2","nama":"LINTAS SUMBAWA BIMA MANGGALEWA","as":"MYD","am":"MLN","kab":"DOMPU"},{"kode":"T4NF","nama":"LINTAS SUMBAWA BIMA BAKAJAYA","as":"HAZ","am":"AMI","kab":"DOMPU"},{"kode":"TD1F","nama":"KARTINI NO 1-DOMPU","as":"MYD","am":"MLN","kab":"DOMPU"},{"kode":"T4EX","nama":"GORA 2 PETELUAN INDAH-LBR","as":"RSR","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TFID","nama":"RAYA SENGGIGI MENINTING - LBR","as":"IMS","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"FMUJ","nama":"RSUP PRABU RANGKASARI","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TFD7","nama":"RAYA MANTANG AIK DAREK-LTH","as":"RSR","am":"IRN","kab":"LOMBOK TENGAH"},{"kode":"TCNO","nama":"LINTAS LAKEY HU","as":"HAZ","am":"AMI","kab":"DOMPU"},{"kode":"TS5R","nama":"H. LALU ANANG WARINGIN - LTM","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TDL3","nama":"DARUL HIKMAH NO 10 - LBR","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TNOT","nama":"PELABUHAN SAPE-BIMA","as":"MYD","am":"MLN","kab":"BIMA"},{"kode":"T5OM","nama":"RAYA BENGKEL MEREMBU NO 49 - LBR","as":"-","am":"-","kab":"LOMBOK BARAT"},{"kode":"TYD4","nama":"PAHLAWAN ALAS DALAM - SBS","as":"AMR","am":"AMI","kab":"SUMBAWA"}];
+let STORES = DEFAULT_STORES.slice();
 
-const AS_MAP = {
-  'MHS': 'MHS', 'AHH': 'AMR', 'MLN': 'MJN', 'HHS': 'HAZ', 'MRI': 'MZI',
-  'LZH': 'LZH', 'ASA': 'ASA', 'ARD': 'ARD', 'PRH': 'PAR', 'NHT': 'NDA',
-  'IDI': 'IWI', 'RSK': 'RSR', 'ASN': 'ASN', 'MDM': 'DMJ', 'MYD': 'MYD',
-  'WRN': 'WRN', 'JMK': 'JMK', 'KIN': 'HAR', 'MDN': 'MDN', 'HAA': 'HEN',
-  'MSI': 'MSI', 'SAP': 'SAP', 'IMS': 'IMS', 'ARI': 'ARF', 'RDH': 'RDH',
-  'HAN': 'HAN'
+const MAX_BYTES = 2.8 * 1024 * 1024;
+let currentStore = null;
+let layoutCounts = {};
+let storageAvailable = false;
+
+/* ---- shared persistence via Supabase (semua orang yang buka link ini lihat data yang sama) ---- */
+const SB_URL = 'https://jiluptbgrzoiwunkzlub.supabase.co';
+const SB_KEY = 'sb_publishable_8fF93CYYMGWjzpTVEzl8CA_YqoNDcPX';
+const SB_HEADERS = {
+  'apikey': SB_KEY,
+  'Authorization': 'Bearer ' + SB_KEY,
+  'Content-Type': 'application/json'
 };
 
-function asMapCode(c){ return AS_MAP[c] || c; }
-
-const AS_NAMES={
-  'MHS':'M HANDRI SUSANTO','AMR':'AMIR HAMZAH','MJN':'MALJAN','HAZ':'HAMZAH HAS',
-  'MZI':'MUHAMMAD ROZI','LZH':'LL ZAKI HIDAYAT','ASA':'ANDRI SAPUTRA',
-  'ARD':'LALU ARDIAN ABDI PRATAMA','PAR':'PARHIYAH','NDA':'NUR HIDAYAT',
-  'IWI':'IDAWATI','RSR':'RIAN SABILAL KHAER','ASN':'AHMAD SUHERMAN',
-  'DMJ':'MUHAMMAD DWI MEKA','MYD':'MAHYADI','WRN':'WAHYU RAMDHAN',
-  'JMK':'JANUARDI MUBARAK','HAR':'KHAERUL IHWANUDDIN','MDN':'MAHDAN',
-  'HEN':'HENDRA ALI AKBAR','MSI':'MUSLIHIN','SAP':'SAPWAN JAYADI',
-  'IMS':'IMAM SYAFA AT','ARF':'ANDHI RINARDI FIRMANSYAH','RDH':'RAHMAD HIDAYATULLAH',
-  'HAN':'HABIEB ANTAR NUSA'
-};
-const AM_NAMES={
-  'AMI':'AMINUDIN','EWY':'EKO WALUYO','MLN':'MARLAN',
-  'IRN':'IRWANTO','TSA':'TABAH SUWASANA','MYA':'MULYANA'
-};
-
-const TIME_SLOTS=['10','13','16','19','22'];
-const SLOT_LBL={'10':'Jam 10.00','13':'Jam 13.00','16':'Jam 16.00','19':'Jam 19.00','22':'Jam 22.00'};
-function curSlot(){const h=new Date().getHours();if(h<13)return'10';if(h<16)return'13';if(h<19)return'16';if(h<22)return'19';return'22';}
-
-/* ============================================================ PARSER ============================================================ */
-function parseDryAM(txt){
-  if(!txt||!txt.trim())return[];
-  const lines=txt.split('\n').map(l=>l.trim()).filter(Boolean);
-  let inDry=false;const rows=[];
-  for(const l of lines){
-    if(l.includes('Jenis Produk: Dry')){inDry=true;continue;}
-    if(inDry&&(l.startsWith('===')||l.startsWith('AM ')))continue;
-    if(inDry&&l.startsWith('Jenis Produk:')&&!l.includes('Dry'))break;
-    if(inDry){
-      const p=l.split('|').map(s=>s.trim());
-      if(p.length>=2){const c=p[0],spd=parseInt(p[1].replace(/,/g,''))||0;
-        if(c&&spd>0){const mc=AM_MAP[c]||c;rows.push({code:mc,origCode:c,spd,std:parseInt((p[2]||'').replace(/,/g,''))||0,apc:parseInt((p[3]||'').replace(/,/g,''))||0,margin:parseFloat(p[4])||0});}}
-    }
+const localDB = {
+  async get(key){
+    const res = await fetch(`${SB_URL}/rest/v1/kv_store?key=eq.${encodeURIComponent(key)}&select=key,value`, { headers: SB_HEADERS });
+    if(!res.ok) throw new Error('Gagal mengambil data (' + res.status + ')');
+    const rows = await res.json();
+    return rows.length ? { key: rows[0].key, value: rows[0].value } : null;
+  },
+  async set(key, value){
+    const res = await fetch(`${SB_URL}/rest/v1/kv_store`, {
+      method: 'POST',
+      headers: { ...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify([{ key, value, updated_at: new Date().toISOString() }])
+    });
+    if(!res.ok) throw new Error('Gagal menyimpan data (' + res.status + ')');
+    const rows = await res.json();
+    return rows.length ? { key: rows[0].key, value: rows[0].value } : { key, value };
+  },
+  async delete(key){
+    const res = await fetch(`${SB_URL}/rest/v1/kv_store?key=eq.${encodeURIComponent(key)}`, {
+      method: 'DELETE', headers: SB_HEADERS
+    });
+    if(!res.ok) throw new Error('Gagal menghapus data (' + res.status + ')');
+    return { key, deleted: true };
+  },
+  async list(prefix){
+    const filter = prefix ? `&key=like.${encodeURIComponent(prefix)}*` : '';
+    const res = await fetch(`${SB_URL}/rest/v1/kv_store?select=key${filter}`, { headers: SB_HEADERS });
+    if(!res.ok) throw new Error('Gagal mengambil daftar (' + res.status + ')');
+    const rows = await res.json();
+    return { keys: rows.map(r => r.key) };
   }
-  return rows;
-}
+};
 
-function parseDryAS(txt){
-  if(!txt||!txt.trim())return[];
-  const lines=txt.split('\n').map(l=>l.trim()).filter(Boolean);
-  let inDry=false;const rows=[];
-  for(const l of lines){
-    if(l.includes('Jenis Produk: Dry')){inDry=true;continue;}
-    if(inDry&&(l.startsWith('===')||l.startsWith('AS ')))continue;
-    if(inDry&&l.startsWith('Jenis Produk:')&&!l.includes('Dry'))break;
-    if(inDry){
-      const p=l.split('|').map(s=>s.trim());
-      if(p.length>=2){const c=p[0],spd=parseInt(p[1].replace(/,/g,''))||0;
-        if(c&&spd>0){const mc=asMapCode(c);rows.push({code:mc,origCode:c,spd,std:parseInt((p[2]||'').replace(/,/g,''))||0,apc:parseInt((p[3]||'').replace(/,/g,''))||0,margin:parseFloat(p[4])||0});}}
-    }
-  }
-  return rows;
-}
-
-/* ============================================================ STATE ============================================================ */
-function getInitState(){
-  return{tab:'input',amText:'',asTexts:Array(6).fill(''),amTextsBySlot:{},asTextsBySlot:{},
-    manualSlot:null,inputSlot:'10',data:{},hisSPD:{},tgtSPD:{},namaAM:{},namaAS:{},
-    totHis:{},totTgt:{},totHisAM:{},totTgtAM:{},totHisAS:{},totTgtAS:{}};
-}
-let S=(()=>{
+async function waitForStorage(){
   try{
-    const s=JSON.parse(localStorage.getItem('rts_v4')||'null');
-    if(s){
-      const m={...getInitState(),...s};
-      if(!m.amTextsBySlot)m.amTextsBySlot={};
-      if(!m.asTextsBySlot)m.asTextsBySlot={};
-      if(m.amText&&!m.amTextsBySlot['10'])m.amTextsBySlot['10']=m.amText;
-      if(m.asTexts&&m.asTexts.some(Boolean)&&(!m.asTextsBySlot['10']||!m.asTextsBySlot['10'].some(Boolean)))
-        m.asTextsBySlot['10']=[...m.asTexts];
-      return m;
-    }
-    return getInitState();
-  }catch(e){return getInitState();}
-})();
-function save(){try{localStorage.setItem('rts_v4',JSON.stringify(S));}catch(e){}}
-
-/* ============================================================ HELPERS ============================================================ */
-function fmt(n){return n?parseInt(n).toLocaleString('id-ID'):'-';}
-function fmtR(n){return Math.round(n).toLocaleString('id-ID');}
-function pct(n){return(n>0?'+':'')+n.toFixed(1)+'%';}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function acvCls(v){if(!v)return'acv-n';if(v>=100)return'acv-h';if(v>=90)return'acv-m';return'acv-l';}
-function expAcvCls(v){if(!v)return'';if(v>=100)return'exp-acv-h';if(v>=90)return'exp-acv-m';return'exp-acv-l';}
-function rnkCls(r){if(r===1)return'rnk rnk-1';if(r===2)return'rnk rnk-2';if(r===3)return'rnk rnk-3';return'rnk';}
-
-/* ============================================================ PROCESS ============================================================ */
-function processAM(){
-  const slot=S.inputSlot||'10';
-  const txt=(S.amTextsBySlot&&S.amTextsBySlot[slot])||S.amText||'';
-  const rows=parseDryAM(txt);
-  if(!rows.length){alert('Data AM tidak ditemukan. Pastikan format benar.');return;}
-  rows.sort((a,b)=>b.spd-a.spd);rows.forEach((r,i)=>r.rank=i+1);
-  S.data['AM_'+slot]={rows,slot,ts:Date.now()};
-  save();S.tab='am';S.manualSlot=slot;render();
+    const res = await fetch(`${SB_URL}/rest/v1/kv_store?select=key&limit=1`, { headers: SB_HEADERS });
+    return res.ok;
+  }catch(e){ return false; }
 }
 
-function processAS(){
-  const slot=S.inputSlot||'10';
-  const texts=(S.asTextsBySlot&&S.asTextsBySlot[slot])||S.asTexts||[];
-  const all=[];
-  for(let i=0;i<6;i++){if(texts[i])all.push(...parseDryAS(texts[i]));}
-  if(!all.length){alert('Data AS tidak ditemukan. Pastikan format benar.');return;}
-  all.sort((a,b)=>b.spd-a.spd);all.forEach((r,i)=>r.rank=i+1);
-  S.data['AS_'+slot]={rows:all,slot,ts:Date.now()};
-  save();S.tab='as';S.manualSlot=slot;render();
+
+const viewList = document.getElementById('viewList');
+const viewDetail = document.getElementById('viewDetail');
+const storeListEl = document.getElementById('storeList');
+const resultCount = document.getElementById('resultCount');
+const searchInput = document.getElementById('searchInput');
+const filterAM = document.getElementById('filterAM');
+const filterAS = document.getElementById('filterAS');
+const filterKab = document.getElementById('filterKab');
+const toast = document.getElementById('toast');
+
+function showToast(msg, type){
+  toast.textContent = msg;
+  toast.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=> toast.classList.remove('show'), 2800);
 }
 
-function getPrevSlot(slot){const i=TIME_SLOTS.indexOf(slot);return i>0?TIME_SLOTS[i-1]:null;}
+function uniqueSorted(arr){ return [...new Set(arr)].filter(Boolean).sort(); }
 
-function buildTableRows(rows,slot,prevD,type){
-  return rows.map(r=>{
-    const his=S.hisSPD[r.code]||0;
-    const tgt=S.tgtSPD[r.code]||0;
-    const acv=tgt?(r.spd/tgt*100):(his?(r.spd/his*100):0); // ACV vs TGT, fallback ke HIS jika TGT kosong
-    const growth=his?((r.spd-his)/his*100):0;
-    const nama=type==='AM'
-      ?(AM_NAMES[r.code]||S.namaAM[r.code]||'')
-      :(AS_NAMES[r.code]||AS_NAMES[r.origCode]||S.namaAS[r.code]||'');
-    return{...r,his,tgt,acv,growth,nama};
+function populateFilters(){
+  filterAM.innerHTML = '<option value="">Semua AM</option>';
+  filterAS.innerHTML = '<option value="">Semua AS</option>';
+  filterKab.innerHTML = '<option value="">Semua kabupaten</option>';
+  uniqueSorted(STORES.map(s=>s.am)).forEach(v=>{
+    const o = document.createElement('option'); o.value = v; o.textContent = v; filterAM.appendChild(o);
+  });
+  uniqueSorted(STORES.map(s=>s.as)).forEach(v=>{
+    const o = document.createElement('option'); o.value = v; o.textContent = v; filterAS.appendChild(o);
+  });
+  uniqueSorted(STORES.map(s=>s.kab)).forEach(v=>{
+    const o = document.createElement('option'); o.value = v; o.textContent = v; filterKab.appendChild(o);
+  });
+  searchInput.value = '';
+  renderStoreList();
+}
+
+function renderStoreList(){
+  const q = searchInput.value.trim().toLowerCase();
+  const am = filterAM.value, as = filterAS.value, kab = filterKab.value;
+
+  const filtered = STORES.filter(s=>{
+    if(am && s.am !== am) return false;
+    if(as && s.as !== as) return false;
+    if(kab && s.kab !== kab) return false;
+    if(q && !(s.kode.toLowerCase().includes(q) || s.nama.toLowerCase().includes(q))) return false;
+    return true;
+  });
+
+  resultCount.textContent = filtered.length;
+
+  if(filtered.length === 0){
+    storeListEl.innerHTML = `<div class="empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <p>Tidak ada toko yang cocok dengan pencarian.</p></div>`;
+    return;
+  }
+
+  storeListEl.innerHTML = '';
+  filtered.forEach(s=>{
+    const n = layoutCounts[s.kode] || 0;
+    const row = document.createElement('div');
+    row.className = 'store-row';
+    row.innerHTML = `
+      <div class="kode-chip">${escapeHtml(s.kode)}</div>
+      <div class="store-info">
+        <div class="store-nama">${escapeHtml(s.nama)}</div>
+        <div class="store-meta"><span>AS ${escapeHtml(s.as)}</span><span>AM ${escapeHtml(s.am)}</span><span>${escapeHtml(s.kab)}</span></div>
+      </div>
+      <div class="badge-count ${n>0?'has':'none'}">${n} layout</div>
+      <div class="chev"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></div>`;
+    row.addEventListener('click', ()=> openStore(s));
+    storeListEl.appendChild(row);
   });
 }
 
-function getPrevRankMap(prevD,type){
-  if(!prevD)return{};
-  const data=buildTableRows(prevD.rows,prevD.slot,null,type);
-  const hasAcv=data.some(r=>r.his>0);
-  if(hasAcv){const sorted=[...data].sort((a,b)=>b.acv-a.acv);sorted.forEach((r,i)=>r.rank=i+1);}
-  else{data.sort((a,b)=>b.spd-a.spd);data.forEach((r,i)=>r.rank=i+1);}
-  const map={};data.forEach(r=>map[r.code]=r.rank);return map;
-}
-
-function getAcvRanked(rows,type,slot,prevD){
-  const data=buildTableRows(rows,slot||'10',prevD||null,type);
-  const hasAcv=data.some(r=>r.his>0);
-  if(hasAcv)data.sort((a,b)=>b.acv-a.acv);else data.sort((a,b)=>b.spd-a.spd);
-  return data;
-}
-
-/* ============================================================ RENDER TABLE (Tampilan Web) ============================================================ */
-function renderTableHTML(rows,slot,prevD,type,prevSlotLabel){
-  const showDelta=!!prevD;
-  const prevLbl=prevSlotLabel||'Jam Sblm';
-  const data=buildTableRows(rows,slot,prevD,type);
-  const prevRankMap=getPrevRankMap(prevD,type);
-  const hasAcv=data.some(r=>r.his>0);
-  if(hasAcv){const sorted=[...data].sort((a,b)=>b.acv-a.acv);sorted.forEach((r,i)=>r.rank=i+1);}
-  data.sort((a,b)=>a.rank-b.rank);
-  data.forEach(r=>{r.pr=prevRankMap[r.code]||null;r.delta=(r.pr!=null)?r.pr-r.rank:null;});
-  const sumHisData=data.reduce((s,r)=>s+(r.his||0),0);
-  const totHisKey=type==='AM'?'totHisAM':'totHisAS';
-  const totTgtKey=type==='AM'?'totTgtAM':'totTgtAS';
-  const totHis=(S[totHisKey]&&S[totHisKey][slot]>0)?S[totHisKey][slot]:(S.totHis&&S.totHis.global>0?S.totHis.global:sumHisData);
-  const totTgt=(S[totTgtKey]&&S[totTgtKey][slot]>0)?S[totTgtKey][slot]:(S.totTgt&&S.totTgt.global>0?S.totTgt.global:data.reduce((s,r)=>s+(r.tgt||0),0));
-
-  let totalRealTime = 0;
-  let totAcv = 0;
-  let totGrow = 0;
-
-  if (type === 'AM') {
-    let sumSpd = rows.reduce((s,r) => s + r.spd, 0);
-    totalRealTime = rows.length ? (sumSpd / rows.length) : 0; // RATA-RATA AM
-
-    // Total ACV: sum(spd) / sum(tgt) — jika ada TGT, else sum(spd)/sum(his)
-    const sumTgt = data.reduce((s,r)=>s+(r.tgt||0),0);
-    const sumHisValid = data.reduce((s,r)=>s+(r.his||0),0);
-    const sumSpdValid = data.filter(r=>(r.tgt||r.his)>0).reduce((s,r)=>s+r.spd,0);
-    if(sumTgt>0) totAcv = sumSpdValid/sumTgt*100;
-    else if(sumHisValid>0) totAcv = data.reduce((s,r)=>s+r.spd,0)/sumHisValid*100;
-
-    const validRows = data.filter(r => r.his > 0);
-    const targetRows = validRows.length ? validRows : data;
-    if (targetRows.length) {
-      totGrow = targetRows.reduce((s,r)=>s+(r.growth||0),0) / targetRows.length; // RATA-RATA AM
-    }
-  } else {
-    // AS mengikuti persis rata-rata AM
-    const dAM = S.data['AM_' + slot];
-    if (dAM && dAM.rows && dAM.rows.length) {
-      let sumSpdAM = dAM.rows.reduce((s,r) => s + r.spd, 0);
-      totalRealTime = sumSpdAM / dAM.rows.length;
-      
-      const amData = buildTableRows(dAM.rows, slot, null, 'AM');
-      const sumTgtAM = amData.reduce((s,r)=>s+(r.tgt||0),0);
-      const sumHisAM = amData.reduce((s,r)=>s+(r.his||0),0);
-      const sumSpdAMv = amData.filter(r=>(r.tgt||r.his)>0).reduce((s,r)=>s+r.spd,0);
-      if(sumTgtAM>0) totAcv = sumSpdAMv/sumTgtAM*100;
-      else if(sumHisAM>0) totAcv = amData.reduce((s,r)=>s+r.spd,0)/sumHisAM*100;
-
-      const validAMRows = amData.filter(r => r.his > 0);
-      const targetAMRows = validAMRows.length ? validAMRows : amData;
-      if (targetAMRows.length) {
-        totGrow = targetAMRows.reduce((s,r)=>s+(r.growth||0),0) / targetAMRows.length;
-      }
-    } else {
-      let sumSpd = rows.reduce((s,r) => s + r.spd, 0);
-      totalRealTime = rows.length ? (sumSpd / rows.length) : 0;
-
-      const sumTgt = data.reduce((s,r)=>s+(r.tgt||0),0);
-      const sumHisValid = data.reduce((s,r)=>s+(r.his||0),0);
-      const sumSpdValid = data.filter(r=>(r.tgt||r.his)>0).reduce((s,r)=>s+r.spd,0);
-      if(sumTgt>0) totAcv = sumSpdValid/sumTgt*100;
-      else if(sumHisValid>0) totAcv = data.reduce((s,r)=>s+r.spd,0)/sumHisValid*100;
-
-      const validRows = data.filter(r => r.his > 0);
-      const targetRows = validRows.length ? validRows : data;
-      if (targetRows.length) {
-        totGrow = targetRows.reduce((s,r)=>s+(r.growth||0),0) / targetRows.length;
-      }
-    }
-  }
-
-  return`<div class="table-wrap"><table>
-    <thead><tr>
-      <th>No</th><th>Inisial</th><th>Nama</th>
-      <th>HIS SPD</th><th>TGT SPD</th>
-      <th>Real Time<br>${SLOT_LBL[slot]}</th>
-      <th>ACV SPD<br><span style="font-size:9px;opacity:.7">vs TGT</span></th><th>Growth<br><span style="font-size:9px;opacity:.7">vs HIS</span></th>
-      ${showDelta?`<th>${prevLbl}</th>`:''}
-      <th>Rank</th>
-      ${showDelta?`<th>Δ</th>`:''}
-    </tr></thead>
-    <tbody>
-    ${data.map((r,i)=>`<tr>
-      <td class="c" style="color:var(--text3)">${i+1}.</td>
-      <td class="l"><b style="color:var(--text);letter-spacing:.3px">${r.code}</b></td>
-      <td class="l" style="color:var(--text3);font-size:10.5px">${r.nama}</td>
-      <td>${fmt(r.his)}</td>
-      <td>${fmt(r.tgt)}</td>
-      <td style="color:var(--text);font-weight:600">${fmtR(r.spd)}</td>
-      <td class="c"><span class="${acvCls(r.acv)}">${(r.tgt||r.his)?r.acv.toFixed(1)+'%':'-'}</span></td>
-      <td class="c ${r.his?(r.growth<0?'g-neg':'g-pos'):''}">${r.his?pct(r.growth):'-'}</td>
-      ${showDelta?`<td class="c" style="color:var(--text3)">${r.pr||'-'}</td>`:''}
-      <td class="c"><span class="${rnkCls(r.rank)}">${r.rank}</span> ${r.rank===1?'🥇':r.rank===2?'🥈':r.rank===3?'🥉':''}</td>
-      ${showDelta?`<td class="c ${r.delta===null?'ds':r.delta>0?'du':r.delta<0?'dd':'ds'}">${r.delta===null?'-':r.delta>0?'▲ '+r.delta:r.delta<0?'▼ '+Math.abs(r.delta):'—'}</td>`:''}
-    </tr>`).join('')}
-    <tr class="tot-row">
-      <td colspan="3" class="l">TOTAL</td>
-      <td>${fmt(totHis)}</td><td>${fmt(totTgt)}</td>
-      <td style="font-weight:700; color:var(--text)">${fmtR(totalRealTime)}</td>
-      <td class="c"><span class="${acvCls(totAcv)}">${totAcv ? totAcv.toFixed(1)+'%':'-'}</span></td>
-      <td class="c ${totGrow<0?'g-neg':'g-pos'}">${totGrow ? pct(totGrow):'-'}</td>
-      ${showDelta?'<td></td>':''}
-      <td></td>
-      ${showDelta?'<td></td>':''}
-    </tr>
-    </tbody>
-  </table></div>`;
-}
-
-/* ============================================================ EXPORT IMAGE ============================================================ */
-function buildExportHTML(rows,slot,prevD,type,prevSlotLabel){
-  const showDelta=!!prevD;
-  const prevLbl=prevSlotLabel||'Jam Sblm';
-  const data=buildTableRows(rows,slot,prevD,type);
-  const prevRankMap=getPrevRankMap(prevD,type);
-  const hasAcv=data.some(r=>r.his>0);
-  if(hasAcv){const sorted=[...data].sort((a,b)=>b.acv-a.acv);sorted.forEach((r,i)=>r.rank=i+1);}
-  data.sort((a,b)=>a.rank-b.rank);
-  data.forEach(r=>{r.pr=prevRankMap[r.code]||null;r.delta=(r.pr!=null)?r.pr-r.rank:null;});
-  
-  const sumHisData=data.reduce((s,r)=>s+(r.his||0),0);
-  const totHisKey=type==='AM'?'totHisAM':'totHisAS';const totTgtKey=type==='AM'?'totTgtAM':'totTgtAS';
-  const totHis=(S[totHisKey]&&S[totHisKey][slot]>0)?S[totHisKey][slot]:(S.totHis&&S.totHis.global>0?S.totHis.global:sumHisData);
-  const totTgt=(S[totTgtKey]&&S[totTgtKey][slot]>0)?S[totTgtKey][slot]:(S.totTgt&&S.totTgt.global>0?S.totTgt.global:data.reduce((s,r)=>s+(r.tgt||0),0));
-  
-  let totalRealTime = 0;
-  let totAcv = 0;
-  let totGrow = 0;
-
-  if (type === 'AM') {
-    let sumSpd = rows.reduce((s,r) => s + r.spd, 0);
-    totalRealTime = rows.length ? (sumSpd / rows.length) : 0;
-
-    const sumTgt = data.reduce((s,r)=>s+(r.tgt||0),0);
-    const sumHisValid = data.reduce((s,r)=>s+(r.his||0),0);
-    const sumSpdValid = data.filter(r=>(r.tgt||r.his)>0).reduce((s,r)=>s+r.spd,0);
-    if(sumTgt>0) totAcv = sumSpdValid/sumTgt*100;
-    else if(sumHisValid>0) totAcv = data.reduce((s,r)=>s+r.spd,0)/sumHisValid*100;
-
-    const validRows = data.filter(r => r.his > 0);
-    const targetRows = validRows.length ? validRows : data;
-    if (targetRows.length) {
-      totGrow = targetRows.reduce((s,r)=>s+(r.growth||0),0) / targetRows.length;
-    }
-  } else {
-    const dAM = S.data['AM_' + slot];
-    if (dAM && dAM.rows && dAM.rows.length) {
-      let sumSpdAM = dAM.rows.reduce((s,r) => s + r.spd, 0);
-      totalRealTime = sumSpdAM / dAM.rows.length;
-      
-      const amData = buildTableRows(dAM.rows, slot, null, 'AM');
-      const sumTgtAM = amData.reduce((s,r)=>s+(r.tgt||0),0);
-      const sumHisAM = amData.reduce((s,r)=>s+(r.his||0),0);
-      const sumSpdAMv = amData.filter(r=>(r.tgt||r.his)>0).reduce((s,r)=>s+r.spd,0);
-      if(sumTgtAM>0) totAcv = sumSpdAMv/sumTgtAM*100;
-      else if(sumHisAM>0) totAcv = amData.reduce((s,r)=>s+r.spd,0)/sumHisAM*100;
-
-      const validAMRows = amData.filter(r => r.his > 0);
-      const targetAMRows = validAMRows.length ? validAMRows : amData;
-      if (targetAMRows.length) {
-        totGrow = targetAMRows.reduce((s,r)=>s+(r.growth||0),0) / targetAMRows.length;
-      }
-    } else {
-      let sumSpd = rows.reduce((s,r) => s + r.spd, 0);
-      totalRealTime = rows.length ? (sumSpd / rows.length) : 0;
-
-      const sumTgt = data.reduce((s,r)=>s+(r.tgt||0),0);
-      const sumHisValid = data.reduce((s,r)=>s+(r.his||0),0);
-      const sumSpdValid = data.filter(r=>(r.tgt||r.his)>0).reduce((s,r)=>s+r.spd,0);
-      if(sumTgt>0) totAcv = sumSpdValid/sumTgt*100;
-      else if(sumHisValid>0) totAcv = data.reduce((s,r)=>s+r.spd,0)/sumHisValid*100;
-
-      const validRows = data.filter(r => r.his > 0);
-      const targetRows = validRows.length ? validRows : data;
-      if (targetRows.length) {
-        totGrow = targetRows.reduce((s,r)=>s+(r.growth||0),0) / targetRows.length;
-      }
-    }
-  }
-  
-  const today=new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
-  return`<div class="exp-wrap">
-    <div class="exp-title">REALTIME SALES — Depo Lombok</div>
-    <div class="exp-sub">${today} &nbsp;|&nbsp; ${SLOT_LBL[slot]}</div>
-    <div class="exp-by">BY ${type}</div>
-    <table class="exp-table">
-      <thead><tr>
-        <th>No</th><th>Inisial</th><th>Nama</th>
-        <th>HIS SPD</th><th>TGT SPD</th>
-        <th>Real Time ${SLOT_LBL[slot]}</th>
-        <th>ACV SPD<br><small>vs TGT</small></th><th>Growth<br><small>vs HIS</small></th>
-        ${showDelta?`<th>Rank ${prevLbl}</th>`:''}
-        <th>Rank</th>
-        ${showDelta?`<th>Selisih</th>`:''}
-      </tr></thead>
-      <tbody>
-      ${data.map((r,i)=>`<tr>
-        <td class="ec" style="color:#000">${i+1}.</td>
-        <td class="el" style="color:#000"><b>${r.code}</b></td>
-        <td class="el" style="font-size:13px;color:#000">${r.nama}</td>
-        <td style="color:#000">${fmt(r.his)}</td><td style="color:#000">${fmt(r.tgt)}</td>
-        <td style="color:#000"><b>${fmtR(r.spd)}</b></td>
-        <td class="ec"><span class="${expAcvCls(r.acv)}">${(r.tgt||r.his)?r.acv.toFixed(1)+'%':'-'}</span></td>
-        <td class="ec" style="color:${r.his?(r.growth<0?'#dc2626':'#16a34a'):'#000'};font-weight:${r.his?700:400}">${r.his?pct(r.growth):'-'}</td>
-        ${showDelta?`<td class="ec" style="color:#000">${r.pr||'-'}</td>`:''}
-        <td class="ec"><span class="exp-rank" style="${r.rank===1?'background:#d97706':r.rank===2?'background:#64748b':r.rank===3?'background:#a05c1f':''}">${r.rank}</span> ${r.rank===1?'🥇':r.rank===2?'🥈':r.rank===3?'🥉':''}</td>
-        ${showDelta?`<td class="ec" style="color:${r.delta===null?'#000':r.delta>0?'#16a34a':r.delta<0?'#dc2626':'#000'}"><b>${r.delta===null?'-':r.delta>0?'▲ '+r.delta:r.delta<0?'▼ '+Math.abs(r.delta):'-'}</b></td>`:''}
-      </tr>`).join('')}
-      <tr class="tot">
-        <td colspan="3" class="el" style="color:#000">TOTAL</td>
-        <td style="color:#000">${fmt(totHis)}</td><td style="color:#000">${fmt(totTgt)}</td>
-        <td style="color:#000"><b>${fmtR(totalRealTime)}</b></td>
-        <td class="ec"><span class="${expAcvCls(totAcv)}">${totAcv ? totAcv.toFixed(1)+'%':'-'}</span></td>
-        <td class="ec" style="color:${totGrow<0?'#dc2626':'#16a34a'};font-weight:700">${totGrow ? pct(totGrow):'-'}</td>
-        ${showDelta?'<td style="color:#000"></td>':''}<td style="color:#000"></td>${showDelta?'<td style="color:#000"></td>':''}
-      </tr>
-      </tbody>
-    </table>
-  </div>`;
-}
-
-async function downloadImg(type){
-  const slot=S.manualSlot||curSlot();
-  const prevSlot=getPrevSlot(slot);const prevLbl=prevSlot?SLOT_LBL[prevSlot]:'Jam Sblm';
-  const dAM=S.data['AM_'+slot];const dAS=S.data['AS_'+slot];
-  if(type==='AM'&&!dAM){alert('Belum ada data AM untuk '+SLOT_LBL[slot]);return;}
-  if(type==='AS'&&!dAS){alert('Belum ada data AS untuk '+SLOT_LBL[slot]);return;}
-  if(type==='BOTH'&&!dAM&&!dAS){alert('Belum ada data AM maupun AS untuk '+SLOT_LBL[slot]);return;}
-  const prevDAM=(prevSlot&&S.data['AM_'+prevSlot])||null;
-  const prevDAS=(prevSlot&&S.data['AS_'+prevSlot])||null;
-  let combinedHTML='';
-  if((type==='AM'||type==='BOTH')&&dAM) combinedHTML+=buildExportHTML(dAM.rows,slot,prevDAM,'AM',prevLbl);
-  if((type==='AS'||type==='BOTH')&&dAS){if(combinedHTML)combinedHTML+='<div style="height:18px"></div>';combinedHTML+=buildExportHTML(dAS.rows,slot,prevDAS,'AS',prevLbl);}
-  const el=document.createElement('div');
-  el.style.cssText='position:absolute;left:-9999px;top:0;background:#fff;display:inline-block;';
-  el.innerHTML=`<div style="background:#fff;padding:0;font-family:Arial,sans-serif;display:inline-block">${combinedHTML}</div>`;
-  document.body.appendChild(el);
+async function loadLayoutCounts(){
+  if(!storageAvailable){ layoutCounts = {}; renderStoreList(); return; }
   try{
-    await new Promise(r=>setTimeout(r,200));
-    const inner=el.firstChild;
-    const W=inner.scrollWidth;
-    const H=inner.scrollHeight;
-    const canvas=await html2canvas(inner,{backgroundColor:'#ffffff',scale:2,useCORS:true,logging:false,allowTaint:true,width:W,height:H,windowWidth:W});
-    const link=document.createElement('a');
-    const date=new Date().toLocaleDateString('id-ID').replace(/\//g,'-');
-    link.download=`RealTime_${type==='BOTH'?'AM_AS':type}_${slot}_${date}.png`;
-    link.href=canvas.toDataURL('image/png');
-    document.body.appendChild(link);link.click();document.body.removeChild(link);
-  }catch(e){alert('Gagal membuat gambar: '+e.message);}
-  finally{document.body.removeChild(el);}
-}
-
-/* ============================================================ UPLOAD XLSX ============================================================ */
-function handleXLSXUpload(file){
-  if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    try{
-      const wb=XLSX.read(e.target.result,{type:'array'});
-      const ws=wb.Sheets[wb.SheetNames[0]];
-      const json=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-      let hisCnt=0,foundTotal=false,tempTotHisAM=0,tempTotTgtAM=0;
-      for(let i=0;i<json.length;i++){
-        const row=json[i];
-        const rowStr=row.map(c=>String(c||'').toUpperCase()).join('|');
-        const inisial=String(row[1]||'').trim().toUpperCase();
-        const nama=String(row[2]||'').trim().toUpperCase();
-        const isTotal=rowStr.includes('TOTAL')||nama==='TOTAL'||inisial==='TOTAL';
-        if(isTotal){
-          let hisVal=0,tgtVal=0;
-          for(let ci=3;ci<row.length;ci++){const v=parseFloat(String(row[ci]).replace(/,/g,''));if(!isNaN(v)&&v>1000){if(!hisVal)hisVal=v;else if(!tgtVal&&v!==hisVal){tgtVal=v;break;}}}
-          const colE=parseFloat(String(row[4]||'').replace(/,/g,''));const colF=parseFloat(String(row[5]||'').replace(/,/g,''));
-          if(!isNaN(colE)&&colE>0)hisVal=colE;if(!isNaN(colF)&&colF>0)tgtVal=colF;
-          tempTotHisAM=Math.round(hisVal)||0;tempTotTgtAM=Math.round(tgtVal)||0;foundTotal=true;continue;
-        }
-        const mappedAM=AM_MAP[inisial]||inisial;
-        const his=parseFloat(String(row[4]||'').replace(/,/g,''));const tgt=parseFloat(String(row[5]||'').replace(/,/g,''));
-        if(inisial&&!isNaN(his)&&his>0){
-          if(['AMI','EWY','EWO','MLN','IRN','TSA','MYA'].includes(inisial)||Object.values(AM_MAP).includes(inisial)){
-            S.hisSPD[mappedAM]=Math.round(his);hisCnt++;
-            if(tgt&&!isNaN(tgt)&&tgt>0)S.tgtSPD[mappedAM]=Math.round(tgt);
-          }
-          if(AS_MAP[inisial] || Object.values(AS_MAP).includes(inisial)){
-            const dispCode = AS_MAP[inisial] || inisial;
-            S.hisSPD[dispCode]=Math.round(his);hisCnt++;
-            if(tgt&&!isNaN(tgt)&&tgt>0)S.tgtSPD[dispCode]=Math.round(tgt);
-          }
-        }
+    const res = await localDB.list('layout:');
+    const keys = (res && res.keys) ? res.keys : [];
+    layoutCounts = {};
+    keys.forEach(k=>{
+      const parts = k.split(':');
+      if(parts.length >= 2){
+        const kode = parts[1];
+        layoutCounts[kode] = (layoutCounts[kode] || 0) + 1;
       }
-      if(!S.totHisAM)S.totHisAM={};if(!S.totTgtAM)S.totTgtAM={};if(!S.totHisAS)S.totHisAS={};if(!S.totTgtAS)S.totTgtAS={};
-      if(foundTotal&&tempTotHisAM>0){TIME_SLOTS.forEach(sl=>{S.totHisAM[sl]=tempTotHisAM;S.totTgtAM[sl]=tempTotTgtAM;S.totHisAS[sl]=tempTotHisAM;S.totTgtAS[sl]=tempTotTgtAM;});S.totHis.global=tempTotHisAM;S.totTgt.global=tempTotTgtAM;}
-      save();render();
-      alert(`✅ Import berhasil! ${hisCnt} data HIS/TGT dimuat.${foundTotal?' Total HIS: '+tempTotHisAM.toLocaleString('id-ID')+' | TGT: '+tempTotTgtAM.toLocaleString('id-ID'):''}`);
-    }catch(err){alert('Gagal baca file: '+err.message);}
-  };
-  reader.readAsArrayBuffer(file);
+    });
+  }catch(e){ layoutCounts = {}; }
+  renderStoreList();
 }
 
-/* ============================================================ EXPORT / IMPORT STATE ============================================================ */
-function exportState(){
-  const json=JSON.stringify(S,null,2);
-  const blob=new Blob([json],{type:'application/json'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  const date=new Date().toLocaleDateString('id-ID').replace(/\//g,'-');
-  a.download=`RTS_Data_${date}.json`;a.href=url;
-  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+function escapeHtml(str){
+  const d = document.createElement('div'); d.textContent = str; return d.innerHTML;
 }
 
-function importState(file){
-  if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    try{
-      const parsed=JSON.parse(e.target.result);
-      const merged={...getInitState(),...parsed};
-      if(!merged.amTextsBySlot)merged.amTextsBySlot={};
-      if(!merged.asTextsBySlot)merged.asTextsBySlot={};
-      if(!merged.hisSPD)merged.hisSPD={};
-      if(!merged.tgtSPD)merged.tgtSPD={};
-      if(!merged.data)merged.data={};
-      S=merged;save();render();
-      alert('✅ Data berhasil dimuat!');
-    }catch(err){alert('Gagal baca file: '+err.message);}
-  };
-  reader.readAsText(file);
-}
-
-function importFromText(txt){
-  try{
-    const parsed=JSON.parse(txt);
-    const merged={...getInitState(),...parsed};
-    if(!merged.amTextsBySlot)merged.amTextsBySlot={};
-    if(!merged.asTextsBySlot)merged.asTextsBySlot={};
-    if(!merged.hisSPD)merged.hisSPD={};
-    if(!merged.tgtSPD)merged.tgtSPD={};
-    if(!merged.data)merged.data={};
-    S=merged;save();
-    document.getElementById('muatModal').style.display='none';
-    render();
-    alert('✅ Data berhasil dimuat!');
-  }catch(err){alert('❌ Format JSON tidak valid: '+err.message);}
-}
-
-function openMuatModal(){
-  document.getElementById('muatModal').style.display='flex';
-  document.getElementById('muatTxt').value='';
-  setTimeout(()=>document.getElementById('muatTxt').focus(),100);
-}
-function closeMuatModal(){
-  document.getElementById('muatModal').style.display='none';
-}
-
-/* ============================================================ XLSX DOWNLOAD ============================================================ */
-function dlXLSX(type){
-  const slot=S.manualSlot||curSlot();
-  const key=type+'_'+slot;const d=S.data[key];
-  if(!d){alert('Belum ada data '+type);return;}
-  const prevSlotXL=getPrevSlot(slot);const prevD=(prevSlotXL&&S.data[(type+'_'+prevSlotXL)])||null;
-  const showDelta=!!prevD;const data=buildTableRows(d.rows,slot,prevD,type);const prevRankMapXL=getPrevRankMap(prevD,type);
-  const hasAcv=data.some(r=>r.his>0);
-  if(hasAcv){const sorted=[...data].sort((a,b)=>b.acv-a.acv);sorted.forEach((r,i)=>r.rank=i+1);}
-  data.sort((a,b)=>a.rank-b.rank);data.forEach(r=>{r.pr=prevRankMapXL[r.code]||null;r.delta=(r.pr!=null)?r.pr-r.rank:null;});
-  const hdr=['No','Inisial','Nama','HIS SPD','TGT SPD','Real Time '+SLOT_LBL[slot],'ACV SPD','Growth'];
-  if(showDelta)hdr.push('RANK (jam sblm)');hdr.push('Rank '+SLOT_LBL[slot]);if(showDelta)hdr.push('Selisih');
-  const rows=data.map((r,i)=>{const row=[`${i+1}.`,r.code,r.nama,r.his||'',r.tgt||'',r.spd,r.his?r.acv.toFixed(1)+'%':'-',r.his?pct(r.growth):'-'];if(showDelta)row.push(r.pr||'-');row.push(r.rank);if(showDelta)row.push(r.delta===null?'-':r.delta>0?'+'+r.delta:r.delta<0?r.delta:0);return row;});
-  
-  let totalRealTime = 0;
-  let totAcv = 0;
-  let totGrow = 0;
-
-  if (type === 'AM') {
-    let sumSpd = d.rows.reduce((s,r) => s + r.spd, 0);
-    totalRealTime = d.rows.length ? (sumSpd / d.rows.length) : 0; // RATA-RATA AM
-
-    const validRows = data.filter(r => r.his > 0);
-    const targetRows = validRows.length ? validRows : data;
-    if (targetRows.length) {
-      totAcv = targetRows.reduce((s,r)=>s+(r.acv||0),0) / targetRows.length; // RATA-RATA AM
-      totGrow = targetRows.reduce((s,r)=>s+(r.growth||0),0) / targetRows.length; // RATA-RATA AM
-    }
-  } else {
-    // AS mengikuti persis rata-rata AM
-    const dAM = S.data['AM_' + slot];
-    if (dAM && dAM.rows && dAM.rows.length) {
-      let sumSpdAM = dAM.rows.reduce((s,r) => s + r.spd, 0);
-      totalRealTime = sumSpdAM / dAM.rows.length;
-      
-      const amData = buildTableRows(dAM.rows, slot, null, 'AM');
-      const validAMRows = amData.filter(r => r.his > 0);
-      const targetAMRows = validAMRows.length ? validAMRows : amData;
-      if (targetAMRows.length) {
-        totAcv = targetAMRows.reduce((s,r)=>s+(r.acv||0),0) / targetAMRows.length;
-        totGrow = targetAMRows.reduce((s,r)=>s+(r.growth||0),0) / targetAMRows.length;
-      }
-    } else {
-      let sumSpd = d.rows.reduce((s,r) => s + r.spd, 0);
-      totalRealTime = d.rows.length ? (sumSpd / d.rows.length) : 0;
-
-      const validRows = data.filter(r => r.his > 0);
-      const targetRows = validRows.length ? validRows : data;
-      if (targetRows.length) {
-        totAcv = targetRows.reduce((s,r)=>s+(r.acv||0),0) / targetRows.length;
-        totGrow = targetRows.reduce((s,r)=>s+(r.growth||0),0) / targetRows.length;
-      }
-    }
-  }
-
-  const totHisKey=type==='AM'?'totHisAM':'totHisAS';const totTgtKey=type==='AM'?'totTgtAM':'totTgtAS';
-  const sumHisData=data.reduce((s,r)=>s+(r.his||0),0);
-  const totHis=(S[totHisKey]&&S[totHisKey][slot]>0)?S[totHisKey][slot]:(S.totHis&&S.totHis.global>0?S.totHis.global:sumHisData);
-  const totTgt=(S[totTgtKey]&&S[totTgtKey][slot]>0)?S[totTgtKey][slot]:(S.totTgt&&S.totTgt.global>0?S.totTgt.global:data.reduce((s,r)=>s+(r.tgt||0),0));
-  
-  const totalRow=['','','TOTAL',totHis||'',totTgt||'',Math.round(totalRealTime),totAcv?totAcv.toFixed(1)+'%':'-',totGrow?pct(totGrow):'-'];
-  if(showDelta)totalRow.push('');totalRow.push('');if(showDelta)totalRow.push('');rows.push(totalRow);
-  const ws=XLSX.utils.aoa_to_sheet([hdr,...rows]);ws['!cols']=hdr.map((_,i)=>({wch:i<=2?18:13}));
-  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'BY '+type);
-  XLSX.writeFile(wb,`RealTime_${type}_${slot}_${new Date().toLocaleDateString('id-ID').replace(/\//g,'-')}.xlsx`);
-}
-
-/* ============================================================ REKAP WA ============================================================ */
-function fmtDateRekap(){const d=new Date();const dd=String(d.getDate()).padStart(2,'0');const bulan=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];return`${dd} ${bulan[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;}
-
-function generateRekapText(slot){
-  const dateStr=fmtDateRekap();const jamStr='REAL TIME '+slot+'.00';
-  const dAM=S.data['AM_'+slot];const dAS=S.data['AS_'+slot];
-  let txt='Berikut Update Sales Real-Time \n';
-  if(dAM&&dAM.rows.length){
-    const ranked=getAcvRanked(dAM.rows,'AM',slot,null);
-    const top3=ranked.slice(0,3);const bot3=[...ranked].slice(-3).reverse();
-    txt+=`${dateStr} Depo Lombok\n ${jamStr} \nRANK AM\n`;
-    txt+=`Pencapaian Per AM SPD Tertinggi\n`;top3.forEach((r,i)=>txt+=`${i+1}. ${r.code}\n`);
-    txt+=`Pencapaian Per AM SPD Terendah\n`;bot3.forEach((r,i)=>txt+=`${i+1}. ${r.code}\n`);
-  }
-  if(dAS&&dAS.rows.length){
-    const ranked=getAcvRanked(dAS.rows,'AS',slot,null);
-    const top3=ranked.slice(0,3);const bot3=[...ranked].slice(-3).reverse();
-    txt+=`${dateStr} Depo Lombok\n ${jamStr} \nRANK AS\n`;
-    txt+=`Pencapaian Per AS SPD Tertinggi\n`;top3.forEach((r,i)=>txt+=`${i+1}. ${r.code}\n`);
-    txt+=`Pencapaian Per AS SPD Terendah\n`;bot3.forEach((r,i)=>txt+=`${i+1}. ${r.code}\n`);
-  }
-  txt+='Terimakasih';return txt.trim();
-}
-
-function openRekap(){
-  const slot=S.manualSlot||curSlot();const txt=generateRekapText(slot);
-  if(!txt||txt==='Terimakasih'){alert('Belum ada data AM atau AS untuk '+SLOT_LBL[slot]);return;}
-  document.getElementById('rekapTxt').value=txt;document.getElementById('rekapModal').classList.add('open');
-}
-function closeRekap(){document.getElementById('rekapModal').classList.remove('open');}
-function copyRekap(){
-  const ta=document.getElementById('rekapTxt');ta.select();ta.setSelectionRange(0,99999);
-  try{document.execCommand('copy');}catch(e){navigator.clipboard&&navigator.clipboard.writeText(ta.value);}
-  const btn=document.getElementById('copyBtn');const orig=btn.innerHTML;
-  btn.innerHTML='<i class="ti ti-check"></i> Tersalin!';btn.classList.add('copy-flash');
-  setTimeout(()=>{btn.innerHTML=orig;btn.classList.remove('copy-flash');},1200);
-}
-
-/* ============================================================ RENDER VIEWS ============================================================ */
-function renderViewAM(slot){
-  const d=S.data['AM_'+slot];
-  if(!d)return`<div class="card"><div class="empty-state"><i class="ti ti-table-off"></i><p>Belum ada data AM untuk ${SLOT_LBL[slot]}</p></div></div>`;
-  const prevSlotAM=getPrevSlot(slot);const prevD=(prevSlotAM&&S.data['AM_'+prevSlotAM])||null;const prevLblAM=prevSlotAM?SLOT_LBL[prevSlotAM]:'Jam Sblm';
-  
-  const total = d.rows.length ? d.rows.reduce((s,r)=>s+r.spd,0) / d.rows.length : 0;
-
-  const ranked=getAcvRanked(d.rows,'AM',slot,prevD);
-  return`<div class="card">
-    <div class="card-hdr">
-      <i class="ti ti-users" style="color:var(--blue);font-size:16px"></i>
-      <span class="card-title">Ranking BY AM</span>
-      <span class="badge badge-blue">${d.rows.length} AM</span>
-      <span class="spacer"></span>
-      <span style="font-size:10px;color:var(--text3)">Update ${new Date(d.ts).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</span>
-    </div>
-    <div class="stats-grid">
-      <div class="stat"><div class="stat-lbl">Rata-rata SPD</div><div class="stat-val">${fmtR(total)}</div></div>
-      <div class="stat"><div class="stat-lbl">Jumlah AM</div><div class="stat-val">${d.rows.length}</div></div>
-      <div class="stat"><div class="stat-lbl">🥇 Rank 1</div><div class="stat-val" style="color:var(--amber)">${ranked[0]?.code||'-'}</div></div>
-      <div class="stat"><div class="stat-lbl">Rank Akhir</div><div class="stat-val" style="color:var(--red)">${ranked[ranked.length-1]?.code||'-'}</div></div>
-    </div>
-    ${renderTableHTML(d.rows,slot,prevD,'AM',prevLblAM)}
-  </div>`;
-}
-
-function renderViewAS(slot){
-  const d=S.data['AS_'+slot];
-  if(!d)return`<div class="card"><div class="empty-state"><i class="ti ti-table-off"></i><p>Belum ada data AS untuk ${SLOT_LBL[slot]}</p></div></div>`;
-  const prevSlotAS=getPrevSlot(slot);const prevD=(prevSlotAS&&S.data['AS_'+prevSlotAS])||null;const prevLblAS=prevSlotAS?SLOT_LBL[prevSlotAS]:'Jam Sblm';
-  
-  let total = d.rows.length ? d.rows.reduce((s,r)=>s+r.spd,0) / d.rows.length : 0;
-  const dAM = S.data['AM_'+slot];
-  if(dAM && dAM.rows && dAM.rows.length) {
-    total = dAM.rows.reduce((s,r)=>s+r.spd,0) / dAM.rows.length;
-  }
-  
-  const ranked=getAcvRanked(d.rows,'AS',slot,prevD);
-  return`<div class="card">
-    <div class="card-hdr">
-      <i class="ti ti-users-group" style="color:var(--green);font-size:16px"></i>
-      <span class="card-title">Ranking BY AS</span>
-      <span class="badge badge-green">${d.rows.length} AS</span>
-      <span class="spacer"></span>
-      <span style="font-size:10px;color:var(--text3)">Update ${new Date(d.ts).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</span>
-    </div>
-    <div class="stats-grid">
-      <div class="stat"><div class="stat-lbl">Rata-rata SPD</div><div class="stat-val">${fmtR(total)}</div></div>
-      <div class="stat"><div class="stat-lbl">Jumlah AS</div><div class="stat-val">${d.rows.length}</div></div>
-      <div class="stat"><div class="stat-lbl">🥇 Rank 1</div><div class="stat-val" style="color:var(--amber)">${ranked[0]?.code||'-'}</div></div>
-      <div class="stat"><div class="stat-lbl">Rank Akhir</div><div class="stat-val" style="color:var(--red)">${ranked[ranked.length-1]?.code||'-'}</div></div>
-    </div>
-    ${renderTableHTML(d.rows,slot,prevD,'AS',prevLblAS)}
-  </div>`;
-}
-
-function renderHisTgt(){
-  const amCodes=['AMI','EWY','MLN','IRN','TSA','MYA'];
-  const asCodes=[...new Set(Object.values(AS_MAP))].sort();
-  if(!S.totHisAM)S.totHisAM={};if(!S.totTgtAM)S.totTgtAM={};if(!S.totHisAS)S.totHisAS={};if(!S.totTgtAS)S.totTgtAS={};
-  function tblSection(codes,title,nameMap){
-    return`<div class="his-blk">
-      <div class="his-blk-t">${title}</div>
-      <table class="his-table">
-        <thead><tr><th>Kode</th><th>Nama</th><th>HIS SPD</th><th>TGT SPD</th></tr></thead>
-        <tbody>${codes.map(c=>`<tr>
-          <td><b style="color:var(--text)">${c}</b></td>
-          <td style="font-size:10px;color:var(--text3)">${nameMap[c]||AM_NAMES[c]||AS_NAMES[c]||''}</td>
-          <td><input class="inp" type="number" value="${S.hisSPD[c]||''}" placeholder="0" onchange="S.hisSPD['${c}']=parseInt(this.value)||0;save()"></td>
-          <td><input class="inp" type="number" value="${S.tgtSPD[c]||''}" placeholder="0" onchange="S.tgtSPD['${c}']=parseInt(this.value)||0;save()"></td>
-        </tr>`).join('')}</tbody>
-      </table>
-    </div>`;
-  }
-  const totSection=`<div class="card" style="margin-top:0">
-    <div class="card-hdr">
-      <i class="ti ti-chart-bar" style="color:var(--blue);font-size:16px"></i>
-      <span class="card-title">Total HIS & TGT per Jam</span>
-      <span class="badge badge-blue">Per Jam</span>
-    </div>
-    <div class="info-box"><i class="ti ti-info-circle"></i><span>Salin nilai total langsung dari baris TOTAL di file Excel. Jika semua jam sama, isi jam 10 saja — dipakai sebagai fallback global.</span></div>
-    <div style="overflow-x:auto;padding:0 16px 14px">
-      <table class="his-table" style="min-width:440px">
-        <thead><tr><th>Jam</th><th>Total HIS AM</th><th>Total TGT AM</th><th>Total HIS AS</th><th>Total TGT AS</th></tr></thead>
-        <tbody>
-          ${TIME_SLOTS.map(s=>`<tr>
-            <td><b style="color:var(--text)">${SLOT_LBL[s]}</b></td>
-            <td><input class="inp" type="number" value="${S.totHisAM[s]!=null?S.totHisAM[s]:''}" placeholder="0" onchange="if(!S.totHisAM)S.totHisAM={};S.totHisAM['${s}']=parseInt(this.value)||0;save()"></td>
-            <td><input class="inp" type="number" value="${S.totTgtAM[s]!=null?S.totTgtAM[s]:''}" placeholder="0" onchange="if(!S.totTgtAM)S.totTgtAM={};S.totTgtAM['${s}']=parseInt(this.value)||0;save()"></td>
-            <td><input class="inp" type="number" value="${S.totHisAS[s]!=null?S.totHisAS[s]:''}" placeholder="0" onchange="if(!S.totHisAS)S.totHisAS={};S.totHisAS['${s}']=parseInt(this.value)||0;save()"></td>
-            <td><input class="inp" type="number" value="${S.totTgtAS[s]!=null?S.totTgtAS[s]:''}" placeholder="0" onchange="if(!S.totTgtAS)S.totTgtAS={};S.totTgtAS['${s}']=parseInt(this.value)||0;save()"></td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>
-  </div>`;
-  return`${totSection}<div class="card">
-    <div class="card-hdr">
-      <i class="ti ti-list-details" style="color:var(--amber);font-size:16px"></i>
-      <span class="card-title">HIS SPD & TGT SPD per Individu</span>
-      <span class="badge badge-amber">Auto-simpan</span>
-    </div>
-    <div class="info-box"><i class="ti ti-info-circle"></i><span>Atau upload file Excel di tab Input Data untuk import otomatis. Kode yang ditampilkan adalah kode inisial resmi.</span></div>
-    <div class="his-grid">
-      ${tblSection(amCodes,'Per AM',AM_NAMES)}
-      ${tblSection(asCodes,'Per AS',AS_NAMES)}
-    </div>
-  </div>`;
-}
-
-function renderInput(slot){
-  const iSlot=S.inputSlot||'10';
-  return`
-  <div class="card">
-    <div class="card-hdr">
-      <i class="ti ti-clock" style="color:var(--blue);font-size:16px"></i>
-      <span class="card-title">Pilih Jam Input</span>
-      <span class="badge badge-amber">Disimpan per jam</span>
-    </div>
-    <div class="slot-pills">
-      ${TIME_SLOTS.map(s=>`<button class="slot-pill ${s===iSlot?'active':''}" onclick="S.inputSlot='${s}';save();render()">${SLOT_LBL[s]}</button>`).join('')}
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-hdr">
-      <i class="ti ti-file-spreadsheet" style="color:var(--text2);font-size:16px"></i>
-      <span class="card-title">Upload HIS & TGT (Excel)</span>
-      <span class="badge badge-amber">Format REAL_TIME</span>
-    </div>
-    <div style="padding:12px 16px">
-      <div class="upload-zone" onclick="document.getElementById('xfile').click()" ondragover="event.preventDefault();this.style.borderColor='var(--blue)'" ondragleave="this.style.borderColor=''" ondrop="event.preventDefault();handleXLSXUpload(event.dataTransfer.files[0]);this.style.borderColor=''">
-        <div class="uz-icon"><i class="ti ti-cloud-upload"></i></div>
-        <p>Klik atau drag & drop file Excel (.xlsx)</p>
-        <small>Kolom: Inisial (B), HIS SPD (E), TGT SPD (F)</small>
-      </div>
-    </div>
-    <input type="file" id="xfile" accept=".xlsx,.xls" style="display:none" onchange="handleXLSXUpload(this.files[0]);this.value=''">
-    <div class="btn-row">
-      <button class="btn btn-ghost btn-sm" onclick="S.hisSPD={};S.tgtSPD={};save();render()"><i class="ti ti-trash"></i> Reset HIS/TGT</button>
-      <span style="font-size:11px;color:var(--text3)">${Object.keys(S.hisSPD).length} kode HIS dimuat</span>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-hdr">
-      <i class="ti ti-user" style="color:var(--blue);font-size:16px"></i>
-      <span class="card-title">Input Data AM</span>
-      <span class="badge badge-blue">1 teks — semua AM</span>
-      <span class="badge badge-amber" style="margin-left:auto">${SLOT_LBL[iSlot]}</span>
-    </div>
-    <div style="padding:12px 16px">
-      <textarea style="min-height:130px" id="amtxt" oninput="if(!S.amTextsBySlot)S.amTextsBySlot={};S.amTextsBySlot[S.inputSlot]=this.value;S.amText=this.value" placeholder="Paste teks telegram semua AM untuk ${SLOT_LBL[iSlot]}...">${esc((S.amTextsBySlot&&S.amTextsBySlot[iSlot])||'')}</textarea>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-blue" onclick="processAM()"><i class="ti ti-check"></i> Proses AM — ${SLOT_LBL[iSlot]}</button>
-      <button class="btn btn-ghost btn-sm" onclick="if(!S.amTextsBySlot)S.amTextsBySlot={};S.amTextsBySlot[S.inputSlot]='';S.amText='';save();render()"><i class="ti ti-x"></i> Hapus</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-hdr">
-      <i class="ti ti-users" style="color:var(--green);font-size:16px"></i>
-      <span class="card-title">Input Data AS</span>
-      <span class="badge badge-green">6 teks — per AM</span>
-      <span class="badge badge-amber" style="margin-left:auto">${SLOT_LBL[iSlot]}</span>
-    </div>
-    <div class="as-grid">
-      ${Array(6).fill(0).map((_,i)=>`
-        <div class="as-blk">
-          <div class="as-blk-t">AS dari AM ${i+1}</div>
-          <textarea style="min-height:90px" id="astxt${i}" oninput="if(!S.asTextsBySlot)S.asTextsBySlot={};if(!S.asTextsBySlot[S.inputSlot])S.asTextsBySlot[S.inputSlot]=Array(6).fill('');S.asTextsBySlot[S.inputSlot][${i}]=this.value" placeholder="Paste teks AS AM ${i+1} (${SLOT_LBL[iSlot]})...">${esc((S.asTextsBySlot&&S.asTextsBySlot[iSlot]&&S.asTextsBySlot[iSlot][i])||'')}</textarea>
-        </div>`).join('')}
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-blue" onclick="processAS()"><i class="ti ti-check"></i> Proses AS — ${SLOT_LBL[iSlot]}</button>
-      <button class="btn btn-ghost btn-sm" onclick="if(!S.asTextsBySlot)S.asTextsBySlot={};S.asTextsBySlot[S.inputSlot]=Array(6).fill('');S.asTexts=Array(6).fill('');save();render()"><i class="ti ti-x"></i> Hapus Semua</button>
-    </div>
-  </div>`;
-}
-
-/* ============================================================ MAIN RENDER ============================================================ */
-function render(){
-  const slot=S.manualSlot||curSlot();
-  const today=new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'});
-  document.getElementById('root').innerHTML=`
-    <div class="header">
-      <div class="header-left">
-        <h1>📊 Realtime Sales — Depo Lombok</h1>
-        <p><span class="live-dot"></span>${today} &nbsp;·&nbsp; Slot aktif: <b style="color:var(--blue)">${SLOT_LBL[slot]}</b></p>
-      </div>
-      <div class="header-right">
-        <select class="time-sel" onchange="S.manualSlot=this.value;save();render()">
-          ${TIME_SLOTS.map(s=>`<option value="${s}" ${s===slot?'selected':''}>${SLOT_LBL[s]}</option>`).join('')}
-        </select>
-        <button class="btn btn-amber btn-sm" onclick="downloadImg('BOTH')"><i class="ti ti-photo-down"></i> Img</button>
-        <button class="btn btn-green btn-sm" onclick="dlXLSX('AM')"><i class="ti ti-download"></i> xlsx AM</button>
-        <button class="btn btn-green btn-sm" onclick="dlXLSX('AS')"><i class="ti ti-download"></i> xlsx AS</button>
-        <button class="btn btn-purple btn-sm" onclick="openRekap()"><i class="ti ti-brand-whatsapp"></i> Rekap WA</button>
-        <button class="btn btn-teal btn-sm" onclick="exportState()"><i class="ti ti-share"></i> Kirim Data</button>
-        <button class="btn btn-indigo btn-sm" style="cursor:pointer" onclick="openMuatModal()"><i class="ti ti-folder-open"></i> Muat Data</button>
-      </div>
-    </div>
-    <div class="tab-bar">
-      ${[['input','✏️ Input Data'],['am','📋 Tabel AM'],['as','📋 Tabel AS'],['his','🎯 HIS & TGT']].map(([t,l])=>`<button class="tab ${S.tab===t?'active':''}" onclick="S.tab='${t}';save();render()">${l}</button>`).join('')}
-    </div>
-    ${S.tab==='input'?renderInput(slot):''}
-    ${S.tab==='am'?renderViewAM(slot):''}
-    ${S.tab==='as'?renderViewAS(slot):''}
-    ${S.tab==='his'?renderHisTgt():''}
-  `;
-}
-
-window.handleXLSXUpload=handleXLSXUpload;window.downloadImg=downloadImg;
-window.dlXLSX=dlXLSX;window.openRekap=openRekap;window.closeRekap=closeRekap;
-window.copyRekap=copyRekap;window.exportState=exportState;window.importState=importState;
-window.S=S;window.save=save;
-document.getElementById('muatDataFileStatic').addEventListener('change',function(){
-  if(this.files&&this.files[0]){importState(this.files[0]);}
-  this.value='';
+[searchInput, filterAM, filterAS, filterKab].forEach(el=>{
+  el.addEventListener('input', renderStoreList);
+  el.addEventListener('change', renderStoreList);
 });
-render();
+
+/* ---- navigation ---- */
+function openStore(s){
+  currentStore = s;
+  document.getElementById('dKode').textContent = s.kode;
+  document.getElementById('dNama').textContent = s.nama;
+  document.getElementById('dAS').textContent = s.as;
+  document.getElementById('dAM').textContent = s.am;
+  document.getElementById('dKab').textContent = s.kab;
+  viewList.classList.remove('active');
+  viewDetail.classList.add('active');
+  window.scrollTo(0,0);
+  loadManifest();
+}
+
+document.getElementById('backBtn').addEventListener('click', ()=>{
+  viewDetail.classList.remove('active');
+  viewList.classList.add('active');
+  loadLayoutCounts();
+});
+
+/* ---- upload / manifest (scoped to currentStore) ---- */
+const dock = document.getElementById('dock');
+const fileInput = document.getElementById('fileInput');
+const manifest = document.getElementById('manifest');
+const fileCount = document.getElementById('fileCount');
+const progress = document.getElementById('progress');
+const progressBar = document.getElementById('progressBar');
+const refreshBtn = document.getElementById('refreshBtn');
+const quickPreview = document.getElementById('quickPreview');
+const qpTitle = document.getElementById('qpTitle');
+const qpBody = document.getElementById('qpBody');
+const qpExpandBtn = document.getElementById('qpExpandBtn');
+const viewerOverlay = document.getElementById('viewerOverlay');
+const viewerTitle = document.getElementById('viewerTitle');
+const viewerBody = document.getElementById('viewerBody');
+const viewerDownload = document.getElementById('viewerDownload');
+const viewerClose = document.getElementById('viewerClose');
+let previewRecord = null;
+
+if(window.pdfjsLib){
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+}
+
+function dataUrlToBytes(dataUrl){
+  const base64 = dataUrl.split(',')[1];
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+async function renderInto(container, rec, maxHeightPx){
+  const isImg = rec.type && rec.type.startsWith('image/');
+  if(isImg){
+    container.innerHTML = `<img src="${rec.dataUrl}" alt="${escapeHtml(rec.name)}">`;
+    return;
+  }
+  container.innerHTML = '<div class="pdf-loading">Memuat PDF…</div>';
+  try{
+    const bytes = dataUrlToBytes(rec.dataUrl);
+    const pdf = await pdfjsLib.getDocument({ data: bytes }).promise;
+    const page = await pdf.getPage(1);
+    const unscaled = page.getViewport({ scale: 1 });
+    const availWidth = Math.max(container.clientWidth || 600, 280);
+    let scale = availWidth / unscaled.width;
+    if(maxHeightPx){ scale = Math.min(scale, maxHeightPx / unscaled.height); }
+    scale = Math.max(scale, 0.15);
+    const viewport = page.getViewport({ scale });
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const ctx = canvas.getContext('2d');
+    container.innerHTML = '';
+    container.appendChild(canvas);
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    if(pdf.numPages > 1){
+      const note = document.createElement('div');
+      note.className = 'pdf-pagenote';
+      note.textContent = 'Halaman 1 dari ' + pdf.numPages + ' · unduh untuk lihat semua halaman';
+      container.appendChild(note);
+    }
+  }catch(err){
+    container.innerHTML = `<div class="pdf-loading">Gagal menampilkan PDF di sini.<br><a href="${rec.dataUrl}" download="${escapeHtml(rec.name)}">Unduh file</a></div>`;
+  }
+}
+
+function showQuickPreview(rec){
+  previewRecord = rec;
+  quickPreview.style.display = 'block';
+  qpTitle.innerHTML = `<b>${escapeHtml(rec.name)}</b> · ${fmtSize(rec.size)} · ${fmtDate(rec.uploadedAt)}`;
+  renderInto(qpBody, rec, 460);
+}
+
+function hideQuickPreview(){
+  previewRecord = null;
+  quickPreview.style.display = 'none';
+  qpBody.innerHTML = '';
+}
+
+function openViewer(rec){
+  viewerTitle.textContent = rec.name;
+  viewerDownload.href = rec.dataUrl;
+  viewerDownload.setAttribute('download', rec.name);
+  viewerBody.innerHTML = '';
+  renderInto(viewerBody, rec, Math.round(window.innerHeight * 0.8));
+  viewerOverlay.classList.add('show');
+}
+function closeViewer(){
+  viewerOverlay.classList.remove('show');
+  viewerBody.innerHTML = '';
+}
+qpBody.addEventListener('click', () => { if(previewRecord) openViewer(previewRecord); });
+qpExpandBtn.addEventListener('click', () => { if(previewRecord) openViewer(previewRecord); });
+viewerClose.addEventListener('click', closeViewer);
+viewerOverlay.addEventListener('click', (e) => { if(e.target === viewerOverlay) closeViewer(); });
+document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeViewer(); });
+
+function fmtSize(bytes){
+  if(bytes < 1024) return bytes + ' B';
+  if(bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/1024/1024).toFixed(2) + ' MB';
+}
+function fmtDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'}) + ' · ' + d.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+}
+function iconFor(type){
+  if(type === 'application/pdf'){
+    return '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';
+  }
+  return '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
+}
+
+dock.addEventListener('click', () => fileInput.click());
+dock.addEventListener('dragover', e => { e.preventDefault(); dock.classList.add('drag'); });
+dock.addEventListener('dragleave', () => dock.classList.remove('drag'));
+dock.addEventListener('drop', e => { e.preventDefault(); dock.classList.remove('drag'); handleFiles(e.dataTransfer.files); });
+fileInput.addEventListener('change', e => { handleFiles(e.target.files); fileInput.value = ''; });
+
+async function handleFiles(fileList){
+  const files = Array.from(fileList);
+  if(files.length === 0 || !currentStore) return;
+  if(!storageAvailable){
+    showToast('Tidak terhubung ke server. Cek koneksi internet.', 'err');
+    return;
+  }
+  for(const file of files){
+    const okType = ['application/pdf','image/jpeg','image/jpg','image/png'].includes(file.type);
+    if(!okType){ showToast('Format ' + file.name + ' tidak didukung.', 'err'); continue; }
+    if(file.size > MAX_BYTES){ showToast(file.name + ' terlalu besar (maks 2.8 MB).', 'err'); continue; }
+    await uploadOne(file);
+  }
+  await loadManifest();
+}
+
+function uploadOne(file){
+  return new Promise((resolve) => {
+    progress.classList.add('active');
+    progressBar.style.width = '10%';
+    const reader = new FileReader();
+    reader.onprogress = (e) => { if(e.lengthComputable){ progressBar.style.width = Math.round((e.loaded / e.total) * 70) + '%'; } };
+    reader.onload = async () => {
+      progressBar.style.width = '85%';
+      try{
+        const key = 'layout:' + currentStore.kode + ':' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+        const record = { name: file.name, type: file.type, size: file.size, uploadedAt: new Date().toISOString(), dataUrl: reader.result };
+        const payload = JSON.stringify(record);
+        if(payload.length > 4.9 * 1024 * 1024){
+          showToast(file.name + ' terlalu besar setelah encoding, coba kompres dulu.', 'err');
+        } else {
+          const res = await localDB.set(key, payload);
+          if(!res){ showToast('Gagal menyimpan ' + file.name + ' (server menolak).', 'err'); }
+          else { progressBar.style.width = '100%'; showToast(file.name + ' berhasil diupload', 'ok'); }
+        }
+      }catch(err){
+        showToast('Gagal menyimpan ' + file.name + ': ' + (err && err.message ? err.message : 'error tidak diketahui'), 'err');
+      }
+      setTimeout(()=>{ progress.classList.remove('active'); progressBar.style.width = '0%'; }, 400);
+      resolve();
+    };
+    reader.onerror = () => { showToast('Gagal membaca ' + file.name, 'err'); progress.classList.remove('active'); resolve(); };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function loadManifest(){
+  if(!currentStore) return;
+  if(!storageAvailable){
+    manifest.innerHTML = `<div class="empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16h.01"/></svg>
+      <p>Tidak bisa terhubung ke server penyimpanan. Cek koneksi internet lalu klik Segarkan.</p></div>`;
+    fileCount.textContent = '0';
+    hideQuickPreview();
+    return;
+  }
+  manifest.innerHTML = '<div class="empty"><p>Memuat manifest…</p></div>';
+  let keys = [];
+  try{
+    const listRes = await localDB.list('layout:' + currentStore.kode + ':');
+    keys = (listRes && listRes.keys) ? listRes.keys : [];
+  }catch(e){ keys = []; }
+
+  if(keys.length === 0){
+    manifest.innerHTML = `<div class="empty">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 13h6M9 17h3M9 9h1"/><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+      <p>Belum ada layout yang diupload untuk toko ini.</p></div>`;
+    fileCount.textContent = '0';
+    hideQuickPreview();
+    return;
+  }
+
+  const records = [];
+  for(const key of keys){
+    try{
+      const r = await localDB.get(key);
+      if(r && r.value){ records.push({ key, ...JSON.parse(r.value) }); }
+    }catch(e){ /* skip */ }
+  }
+  records.sort((a,b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
+  fileCount.textContent = records.length;
+  showQuickPreview(records[0]);
+
+  manifest.innerHTML = '';
+  records.forEach((rec, i) => {
+    const el = document.createElement('div');
+    el.className = 'tag';
+    const isImg = rec.type && rec.type.startsWith('image/');
+    el.innerHTML = `
+      <div class="thumb">${isImg ? `<img src="${rec.dataUrl}" alt="">` : iconFor(rec.type)}</div>
+      <div class="meta">
+        <div class="fname">${escapeHtml(rec.name)}</div>
+        <div class="fsub">${fmtSize(rec.size)} · ${fmtDate(rec.uploadedAt)}</div>
+      </div>
+      <div class="actions">
+        <a href="${rec.dataUrl}" download="${escapeHtml(rec.name)}" title="Unduh" aria-label="Unduh">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        </a>
+        <button data-key="${rec.key}" title="Hapus" aria-label="Hapus">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+        </button>
+      </div>`;
+    el.addEventListener('click', (e) => {
+      if(e.target.closest('.actions')) return;
+      showQuickPreview(rec);
+      quickPreview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    manifest.appendChild(el);
+  });
+
+  manifest.querySelectorAll('button[data-key]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const key = btn.getAttribute('data-key');
+      try{ await localDB.delete(key); showToast('Layout dihapus', 'ok'); loadManifest(); }
+      catch(e){ showToast('Gagal menghapus file', 'err'); }
+    });
+  });
+}
+
+refreshBtn.addEventListener('click', loadManifest);
+
+/* ---- master store list: upload & reset ---- */
+const uploadMasterBtn = document.getElementById('uploadMasterBtn');
+const resetMasterBtn = document.getElementById('resetMasterBtn');
+const masterFileInput = document.getElementById('masterFileInput');
+const masterSourceInfo = document.getElementById('masterSourceInfo');
+
+uploadMasterBtn.addEventListener('click', () => {
+  if(!storageAvailable){
+    showToast('Tidak terhubung ke server. Cek koneksi internet.', 'err');
+    return;
+  }
+  masterFileInput.click();
+});
+
+masterFileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  masterFileInput.value = '';
+  if(!file) return;
+  try{
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    if(rows.length === 0){ showToast('File kosong atau tidak terbaca.', 'err'); return; }
+
+    const headers = Object.keys(rows[0]);
+    const findCol = (test) => headers.find(h => test(h.toUpperCase().trim()));
+    const kodeCol = findCol(h => h.includes('KODE') && h.includes('TOKO') && !h.includes('LAMA'))
+                 || findCol(h => h === 'KODE');
+    const namaCol = findCol(h => h.includes('NAMA') && h.includes('TOKO'))
+                 || findCol(h => h === 'NAMA');
+    const asCol   = findCol(h => h === 'AS');
+    const amCol   = findCol(h => h === 'AM');
+    const kabCol  = findCol(h => h.includes('KABUPATEN')) || findCol(h => h.includes('KOTA') && !h.includes('TOKO'));
+
+    if(!kodeCol || !namaCol){
+      showToast('Kolom KODE TOKO / NAMA TOKO tidak ditemukan. Pastikan format sesuai contoh.', 'err');
+      return;
+    }
+
+    const parsed = rows
+      .map(r => ({
+        kode: String(r[kodeCol] ?? '').trim(),
+        nama: String(r[namaCol] ?? '').trim(),
+        as: asCol ? String(r[asCol] ?? '').trim() : '',
+        am: amCol ? String(r[amCol] ?? '').trim() : '',
+        kab: kabCol ? String(r[kabCol] ?? '').trim() : ''
+      }))
+      .filter(s => s.kode);
+
+    if(parsed.length === 0){ showToast('Tidak ada baris toko yang valid di file ini.', 'err'); return; }
+
+    const meta = { filename: file.name, uploadedAt: new Date().toISOString(), count: parsed.length };
+    const setRes = await localDB.set('store_master', JSON.stringify(parsed));
+    await localDB.set('store_master_meta', JSON.stringify(meta));
+    if(!setRes){ showToast('Gagal menyimpan daftar toko baru.', 'err'); return; }
+
+    STORES = parsed;
+    updateMasterSourceInfo(meta);
+    populateFilters();
+    loadLayoutCounts();
+    showToast(parsed.length + ' toko berhasil dimuat dari ' + file.name, 'ok');
+  }catch(err){
+    showToast('Gagal membaca file: ' + (err && err.message ? err.message : 'format tidak dikenali'), 'err');
+  }
+});
+
+resetMasterBtn.addEventListener('click', async () => {
+  if(!storageAvailable) return;
+  try{
+    await localDB.delete('store_master');
+    await localDB.delete('store_master_meta');
+  }catch(e){ /* keys may not exist */ }
+  STORES = DEFAULT_STORES.slice();
+  resetMasterBtn.style.display = 'none';
+  updateMasterSourceInfo(null);
+  populateFilters();
+  loadLayoutCounts();
+  showToast('Daftar toko dikembalikan ke bawaan (' + DEFAULT_STORES.length + ' toko)', 'ok');
+});
+
+function updateMasterSourceInfo(meta){
+  if(meta){
+    const d = new Date(meta.uploadedAt);
+    masterSourceInfo.textContent = meta.count + ' toko · diunggah dari ' + meta.filename + ' · ' +
+      d.toLocaleDateString('id-ID', {day:'numeric', month:'short', year:'numeric'});
+    resetMasterBtn.style.display = 'inline-flex';
+  } else {
+    masterSourceInfo.textContent = STORES.length + ' toko · daftar bawaan';
+    resetMasterBtn.style.display = 'none';
+  }
+}
+
+/* ---- startup ---- */
+async function init(){
+  const ok = await waitForStorage();
+  storageAvailable = ok;
+  if(!ok){
+    document.getElementById('storageBanner').classList.add('show');
+    document.getElementById('storageNote').style.display = 'none';
+    masterSourceInfo.textContent = STORES.length + ' toko · daftar bawaan (mode tanpa penyimpanan)';
+    populateFilters();
+    return;
+  }
+  document.getElementById('storageBanner').classList.remove('show');
+  document.getElementById('storageNote').style.display = 'flex';
+  try{
+    const metaRes = await localDB.get('store_master_meta');
+    const dataRes = await localDB.get('store_master');
+    if(dataRes && dataRes.value){
+      const parsed = JSON.parse(dataRes.value);
+      if(Array.isArray(parsed) && parsed.length > 0){
+        STORES = parsed;
+        const meta = metaRes && metaRes.value ? JSON.parse(metaRes.value) : null;
+        updateMasterSourceInfo(meta);
+      } else {
+        updateMasterSourceInfo(null);
+      }
+    } else {
+      updateMasterSourceInfo(null);
+    }
+  }catch(e){
+    updateMasterSourceInfo(null);
+  }
+  populateFilters();
+  loadLayoutCounts();
+  if(currentStore) loadManifest();
+}
+
+document.getElementById('retryStorageBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('retryStorageBtn');
+  btn.textContent = 'Mengecek…';
+  await init();
+  if(!storageAvailable){ btn.textContent = 'Coba lagi'; showToast('Penyimpanan masih belum terdeteksi.', 'err'); }
+  else { showToast('Penyimpanan terhubung.', 'ok'); }
+});
+
+init();
 </script>
 </body>
 </html>
