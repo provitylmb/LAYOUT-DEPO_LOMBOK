@@ -233,7 +233,8 @@
     display:flex;align-items:center;justify-content:space-between;gap:14px;
     padding:12px 16px;border-bottom:1px solid var(--line);flex-shrink:0;
   }
-  .viewer-title{font-weight:500;font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .viewer-title{font-weight:500;font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;}
+  .viewer-title .vt-date{display:block;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:400;color:var(--ink-soft);margin-top:2px;}
   .viewer-actions{display:flex;gap:8px;flex-shrink:0;}
   .viewer-body{flex:1;overflow:auto;background:#20242b;display:flex;align-items:center;justify-content:center;}
   .viewer-body img{max-width:100%;max-height:82vh;display:block;margin:auto;}
@@ -327,6 +328,10 @@
       <div class="qp-head">
         <div class="qp-title" id="qpTitle">-</div>
         <div class="qp-actions">
+          <button class="ghost-btn" id="qpRotateBtn" title="Putar gambar">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Putar
+          </button>
           <button class="ghost-btn" id="qpExpandBtn" title="Perbesar">
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
             Perbesar
@@ -367,6 +372,10 @@
     <div class="viewer-head">
       <div class="viewer-title" id="viewerTitle">-</div>
       <div class="viewer-actions">
+        <button class="ghost-btn" id="viewerRotateBtn" title="Putar gambar">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Putar
+        </button>
         <a id="viewerDownload" class="ghost-btn" title="Unduh" download>
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
           Unduh
@@ -552,7 +561,7 @@ function openStore(s){
   viewList.classList.remove('active');
   viewDetail.classList.add('active');
   window.scrollTo(0,0);
-  loadManifest();
+  loadManifest(true); // true = otomatis buka layout terbaru dalam mode HD/fullscreen
 }
 
 document.getElementById('backBtn').addEventListener('click', ()=>{
@@ -573,6 +582,8 @@ const quickPreview = document.getElementById('quickPreview');
 const qpTitle = document.getElementById('qpTitle');
 const qpBody = document.getElementById('qpBody');
 const qpExpandBtn = document.getElementById('qpExpandBtn');
+const qpRotateBtn = document.getElementById('qpRotateBtn');
+const viewerRotateBtn = document.getElementById('viewerRotateBtn');
 const viewerOverlay = document.getElementById('viewerOverlay');
 const viewerTitle = document.getElementById('viewerTitle');
 const viewerBody = document.getElementById('viewerBody');
@@ -627,11 +638,54 @@ async function renderInto(container, rec, maxHeightPx){
   }
 }
 
-function showQuickPreview(rec){
+/* ---- rotasi layout (quick preview & fullscreen viewer) ---- */
+let qpAngle = 0;
+let viewerAngle = 0;
+
+function applyRotation(container, angle){
+  const mediaEl = container.querySelector('img, canvas');
+  if(!mediaEl) return;
+  const finish = () => {
+    const isCanvas = mediaEl.tagName === 'CANVAS';
+    const w = isCanvas ? mediaEl.width : mediaEl.naturalWidth;
+    const h = isCanvas ? mediaEl.height : mediaEl.naturalHeight;
+    mediaEl.style.transition = 'transform .2s ease, width .2s ease, height .2s ease';
+    mediaEl.style.transformOrigin = 'center center';
+    if(!w || !h){
+      mediaEl.style.transform = `rotate(${angle}deg)`;
+      return;
+    }
+    const rect = container.getBoundingClientRect();
+    const availW = Math.max(rect.width - 24, 60);
+    const availH = Math.max(rect.height - 24, 60);
+    const swapped = Math.abs(angle % 180) === 90;
+    const boxW = swapped ? h : w;
+    const boxH = swapped ? w : h;
+    const scale = Math.min(availW / boxW, availH / boxH, 1);
+    mediaEl.style.maxWidth = 'none';
+    mediaEl.style.maxHeight = 'none';
+    mediaEl.style.width = Math.round(w * scale) + 'px';
+    mediaEl.style.height = Math.round(h * scale) + 'px';
+    mediaEl.style.transform = `rotate(${angle}deg)`;
+  };
+  if(mediaEl.tagName === 'IMG' && !mediaEl.complete){
+    mediaEl.addEventListener('load', finish, { once: true });
+  } else {
+    finish();
+  }
+}
+
+function dateInfoHtml(rec){
+  return `Diupload ${fmtDate(rec.uploadedAt)}`;
+}
+
+async function showQuickPreview(rec){
   previewRecord = rec;
+  qpAngle = 0;
   quickPreview.style.display = 'block';
-  qpTitle.innerHTML = `<b>${escapeHtml(rec.name)}</b> · ${fmtSize(rec.size)} · ${fmtDate(rec.uploadedAt)}`;
-  renderInto(qpBody, rec, 460);
+  qpTitle.innerHTML = `<b>${escapeHtml(rec.name)}</b> · ${fmtSize(rec.size)} · <span title="Tanggal upload">${dateInfoHtml(rec)}</span>`;
+  await renderInto(qpBody, rec, 460);
+  applyRotation(qpBody, qpAngle);
 }
 
 function hideQuickPreview(){
@@ -640,13 +694,15 @@ function hideQuickPreview(){
   qpBody.innerHTML = '';
 }
 
-function openViewer(rec){
-  viewerTitle.textContent = rec.name;
+async function openViewer(rec){
+  viewerAngle = 0;
+  viewerTitle.innerHTML = `${escapeHtml(rec.name)}<span class="vt-date">${dateInfoHtml(rec)} · ${fmtSize(rec.size)}</span>`;
   viewerDownload.href = rec.dataUrl;
   viewerDownload.setAttribute('download', rec.name);
   viewerBody.innerHTML = '';
-  renderInto(viewerBody, rec, Math.round(window.innerHeight * 0.8));
   viewerOverlay.classList.add('show');
+  await renderInto(viewerBody, rec, Math.round(window.innerHeight * 0.8));
+  applyRotation(viewerBody, viewerAngle);
 }
 function closeViewer(){
   viewerOverlay.classList.remove('show');
@@ -654,9 +710,22 @@ function closeViewer(){
 }
 qpBody.addEventListener('click', () => { if(previewRecord) openViewer(previewRecord); });
 qpExpandBtn.addEventListener('click', () => { if(previewRecord) openViewer(previewRecord); });
+qpRotateBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  qpAngle = (qpAngle + 90) % 360;
+  applyRotation(qpBody, qpAngle);
+});
+viewerRotateBtn.addEventListener('click', () => {
+  viewerAngle = (viewerAngle + 90) % 360;
+  applyRotation(viewerBody, viewerAngle);
+});
 viewerClose.addEventListener('click', closeViewer);
 viewerOverlay.addEventListener('click', (e) => { if(e.target === viewerOverlay) closeViewer(); });
 document.addEventListener('keydown', (e) => { if(e.key === 'Escape') closeViewer(); });
+window.addEventListener('resize', () => {
+  if(quickPreview.style.display === 'block') applyRotation(qpBody, qpAngle);
+  if(viewerOverlay.classList.contains('show')) applyRotation(viewerBody, viewerAngle);
+});
 
 function fmtSize(bytes){
   if(bytes < 1024) return bytes + ' B';
@@ -726,7 +795,7 @@ function uploadOne(file){
   });
 }
 
-async function loadManifest(){
+async function loadManifest(autoOpen){
   if(!currentStore) return;
   if(!storageAvailable){
     manifest.innerHTML = `<div class="empty">
@@ -762,6 +831,7 @@ async function loadManifest(){
   records.sort((a,b) => new Date(b.uploadedAt) - new Date(a.uploadedAt));
   fileCount.textContent = records.length;
   showQuickPreview(records[0]);
+  if(autoOpen) openViewer(records[0]); // toko diklik -> layout terbaru langsung tampil HD/fullscreen
 
   manifest.innerHTML = '';
   records.forEach((rec, i) => {
@@ -799,7 +869,7 @@ async function loadManifest(){
   });
 }
 
-refreshBtn.addEventListener('click', loadManifest);
+refreshBtn.addEventListener('click', () => loadManifest(false));
 
 /* ---- master store list: upload & reset ---- */
 const uploadMasterBtn = document.getElementById('uploadMasterBtn');
