@@ -295,6 +295,48 @@
   }
   .login-err.show{display:block;}
   body.gate-locked > .wrap{display:none;}
+
+  /* ---- kelola user modal ---- */
+  .user-overlay{
+    position:fixed;inset:0;background:rgba(15,20,26,.88);z-index:90;
+    display:none;align-items:center;justify-content:center;padding:26px;
+  }
+  .user-overlay.show{display:flex;}
+  .user-box{
+    background:#fff;border-radius:12px;max-width:420px;width:100%;
+    max-height:88vh;display:flex;flex-direction:column;overflow:hidden;
+  }
+  .user-box-head{
+    display:flex;align-items:center;justify-content:space-between;gap:14px;
+    padding:16px 20px;border-bottom:1px solid var(--line);flex-shrink:0;
+  }
+  .user-box-head h2{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:22px;margin:0;color:var(--navy);}
+  .user-box-body{padding:18px 20px;overflow-y:auto;}
+  .user-add-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+  .user-add-row input{
+    flex:1;min-width:120px;border:1px solid var(--line);border-radius:7px;padding:9px 11px;
+    font-family:'Inter',sans-serif;font-size:13.5px;box-sizing:border-box;
+  }
+  .user-add-row button{
+    flex-shrink:0;border:none;border-radius:7px;padding:9px 14px;background:var(--navy);color:#fff;
+    font-family:'Inter',sans-serif;font-weight:600;font-size:13px;cursor:pointer;
+  }
+  .user-add-row button:disabled{opacity:.6;cursor:default;}
+  .user-add-err{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--red-dark);margin:-8px 0 14px;display:none;}
+  .user-add-err.show{display:block;}
+  .user-list-title{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.04em;
+    color:var(--ink-soft);text-transform:uppercase;margin-bottom:8px;}
+  .user-row{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:8px 0;border-bottom:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:13.5px;
+  }
+  .user-row:last-child{border-bottom:none;}
+  .user-row .del-user-btn{
+    border:none;background:none;color:var(--red-dark);cursor:pointer;font-size:12px;
+    font-family:'Inter',sans-serif;padding:3px 8px;border-radius:6px;
+  }
+  .user-row .del-user-btn:hover{background:#fbe6e6;}
+  .user-empty{font-size:13px;color:var(--ink-soft);padding:6px 0;}
 </style>
 </head>
 <body class="gate-locked">
@@ -342,6 +384,10 @@
         <div class="master-sub" id="masterSourceInfo">Memuat sumber data…</div>
       </div>
       <div class="master-actions">
+        <button class="ghost-btn" id="manageUsersBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Kelola user
+        </button>
         <button class="ghost-btn" id="uploadMasterBtn">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M12 4l-4 4M12 4l4 4"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
           Unggah daftar toko baru
@@ -452,6 +498,27 @@
   </div>
 </div>
 
+<div class="user-overlay" id="userOverlay">
+  <div class="user-box">
+    <div class="user-box-head">
+      <h2>Kelola user</h2>
+      <button class="ghost-btn" id="userOverlayClose" title="Tutup">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="user-box-body">
+      <div class="user-add-row">
+        <input type="text" id="newUserId" placeholder="User ID baru" inputmode="numeric" autocomplete="off">
+        <input type="password" id="newUserPass" placeholder="Password" autocomplete="off">
+        <button id="addUserBtn">Tambah</button>
+      </div>
+      <div class="user-add-err" id="userAddErr"></div>
+      <div class="user-list-title">User terdaftar</div>
+      <div id="userListBody"><div class="user-empty">Memuat…</div></div>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ---- login gate: user ID terdaftar + password bersama, wajib login tiap buka halaman ---- */
 const VALID_LOGIN_HASHES = new Set([
@@ -463,12 +530,29 @@ const VALID_LOGIN_HASHES = new Set([
   "3c6df0087e8d6c72e5a29440da8a7f09eddbfc3395888ea4fc4c714e53d0c8cc",
   "6e454cefd9bb28b2e5af92e63da4b867209d9dc84c27e2aff9917b8e64c0b25b",
   "1aeebd7bacec3d273410387a2b236a498b9a4ba51aeb41a704e53cdaac3217a0",
-  "280e6b8a8840e45491c57f0869b2de4d9638da877b87c77599a62f140be9723e"
+  "280e6b8a8840e45491c57f0869b2de4d9638da877b87c77599a62f140be9723e",
+  "11e19d107c8016a564278f8f0f34a5d1ed6869068a7bb3e5f8a18349485221ad"
 ]);
 
 async function sha256Hex(str){
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+/* ---- user tambahan yang didaftarkan lewat menu "Kelola user" (tersimpan di server bersama) ---- */
+const DYNAMIC_USERS_KEY = 'auth_users';
+
+async function loadDynamicUsers(){
+  try{
+    const row = await localDB.get(DYNAMIC_USERS_KEY);
+    if(!row || !row.value) return [];
+    const parsed = JSON.parse(row.value);
+    return Array.isArray(parsed) ? parsed : [];
+  }catch(e){ return []; }
+}
+
+async function saveDynamicUsers(list){
+  await localDB.set(DYNAMIC_USERS_KEY, JSON.stringify(list));
 }
 
 (function initLoginGate(){
@@ -487,9 +571,12 @@ async function sha256Hex(str){
     const pass = passInput.value;
     try{
       const hash = await sha256Hex(user + ':' + pass);
-      if(VALID_LOGIN_HASHES.has(hash)){
+      const dynamicUsers = await loadDynamicUsers();
+      const dynamicMatch = dynamicUsers.some(u => u.hash === hash);
+      if(VALID_LOGIN_HASHES.has(hash) || dynamicMatch){
         document.getElementById('loginGate').remove();
         document.body.classList.remove('gate-locked');
+        initUserAdminPanel(user);
       } else {
         errEl.classList.add('show');
         passInput.value = '';
@@ -500,7 +587,109 @@ async function sha256Hex(str){
       btn.textContent = 'Masuk';
     }
   });
+
 })();
+
+/* ---- panel "Kelola user": tambah/hapus user tanpa perlu hash manual ---- */
+const ADMIN_USER_ID = '2015383337';
+
+function initUserAdminPanel(loggedInUser){
+  const openBtn = document.getElementById('manageUsersBtn');
+  if(loggedInUser !== ADMIN_USER_ID){
+    if(openBtn) openBtn.remove();
+    return;
+  }
+  const overlay = document.getElementById('userOverlay');
+  const closeBtn = document.getElementById('userOverlayClose');
+  const listBody = document.getElementById('userListBody');
+  const newIdInput = document.getElementById('newUserId');
+  const newPassInput = document.getElementById('newUserPass');
+  const addBtn = document.getElementById('addUserBtn');
+  const addErr = document.getElementById('userAddErr');
+  if(!openBtn || openBtn.dataset.wired) return;
+  openBtn.dataset.wired = '1';
+
+  async function renderUserList(){
+    listBody.innerHTML = '<div class="user-empty">Memuat…</div>';
+    try{
+      const users = await loadDynamicUsers();
+      if(users.length === 0){
+        listBody.innerHTML = '<div class="user-empty">Belum ada user tambahan. User bawaan tetap aktif.</div>';
+        return;
+      }
+      listBody.innerHTML = '';
+      users.forEach(u => {
+        const row = document.createElement('div');
+        row.className = 'user-row';
+        row.innerHTML = `<span>${u.user}</span><button class="del-user-btn" data-user="${u.user}">Hapus</button>`;
+        listBody.appendChild(row);
+      });
+      listBody.querySelectorAll('.del-user-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          btn.disabled = true;
+          btn.textContent = '…';
+          try{
+            const users = await loadDynamicUsers();
+            const filtered = users.filter(u => u.user !== btn.dataset.user);
+            await saveDynamicUsers(filtered);
+            await renderUserList();
+            showToast('User ' + btn.dataset.user + ' dihapus', 'success');
+          }catch(e){
+            showToast('Gagal menghapus: ' + e.message, 'error');
+            btn.disabled = false;
+            btn.textContent = 'Hapus';
+          }
+        });
+      });
+    }catch(e){
+      listBody.innerHTML = '<div class="user-empty">Gagal memuat daftar user.</div>';
+    }
+  }
+
+  openBtn.addEventListener('click', () => {
+    overlay.classList.add('show');
+    newIdInput.value = '';
+    newPassInput.value = '';
+    addErr.classList.remove('show');
+    renderUserList();
+  });
+  closeBtn.addEventListener('click', () => overlay.classList.remove('show'));
+  overlay.addEventListener('click', (e) => { if(e.target === overlay) overlay.classList.remove('show'); });
+
+  addBtn.addEventListener('click', async () => {
+    const user = newIdInput.value.trim();
+    const pass = newPassInput.value;
+    addErr.classList.remove('show');
+    if(!user || !pass){
+      addErr.textContent = 'User ID dan password wajib diisi.';
+      addErr.classList.add('show');
+      return;
+    }
+    addBtn.disabled = true;
+    addBtn.textContent = 'Menyimpan…';
+    try{
+      const hash = await sha256Hex(user + ':' + pass);
+      const users = await loadDynamicUsers();
+      if(users.some(u => u.user === user)){
+        addErr.textContent = 'User ID itu sudah terdaftar.';
+        addErr.classList.add('show');
+        return;
+      }
+      users.push({ user, hash });
+      await saveDynamicUsers(users);
+      newIdInput.value = '';
+      newPassInput.value = '';
+      await renderUserList();
+      showToast('User ' + user + ' berhasil ditambahkan', 'success');
+    }catch(e){
+      addErr.textContent = 'Gagal menyimpan: ' + e.message;
+      addErr.classList.add('show');
+    } finally {
+      addBtn.disabled = false;
+      addBtn.textContent = 'Tambah';
+    }
+  });
+}
 
 const DEFAULT_STORES = [{"kode":"TSF8","nama":"PEJANGGIK MATARAM","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TFLH","nama":"SRIWIJAYA","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TU3E","nama":"LANGKO","as":"IMS","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TY27","nama":"ADI SUCIPTO","as":"ARF","am":"TSA","kab":"KOTA MATARAM"},{"kode":"T1FO","nama":"HASANUDIN","as":"IMS","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TYNG","nama":"CATUR WARGA","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"T92V","nama":"DOKTER SUTOMO","as":"IMS","am":"TSA","kab":"KOTA MATARAM"},{"kode":"T7NW","nama":"FRESH DOKTER WAHIDIN","as":"MSI","am":"MYA","kab":"KOTA MATARAM"},{"kode":"T9KB","nama":"SANDUBAYA","as":"ASN","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TCMX","nama":"NARMADA","as":"RSR","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"T77C","nama":"PEJANGGIK 2","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TXEU","nama":"SALEH SUNGKAR","as":"ARF","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TV1M","nama":"BUNG KARNO","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TLDJ","nama":"SENGGIGI","as":"MSI","am":"MYA","kab":"LOMBOK BARAT"},{"kode":"T2GC","nama":"SRIWIJAYA 2","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TSPT","nama":"MAJAPAHIT","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TOR8","nama":"COKROAMINOTO","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TO3X","nama":"MAJAPAHIT 2","as":"ASN","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TAN8","nama":"SRIWIJAYA 3","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"T1XD","nama":"PEJANGGIK 3 MATARAM","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TXZC","nama":"HASANUDIN 2 MATARAM","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"T7K2","nama":"MANTANG","as":"RSR","am":"IRN","kab":"LOMBOK TENGAH"},{"kode":"TYE7","nama":"GAJAH MADA 2","as":"ASN","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TICK","nama":"FRESH PANJITILAR 2","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TDCJ","nama":"KOPANG","as":"RSR","am":"IRN","kab":"LOMBOK TENGAH"},{"kode":"TVQD","nama":"PEMUDA","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"T2R5","nama":"KOPERASI","as":"ARF","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TVCM","nama":"S PARMAN","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TBSN","nama":"LEMBAR","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TPMN","nama":"BY PASS BILL","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TLJ1","nama":"PARIWISATA","as":"IMS","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"TRMP","nama":"ADI SUCIPTO 2","as":"ARF","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TDEH","nama":"RUMAK LOMBOK BARAT","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TDEZ","nama":"LABUAPI","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"T7PS","nama":"RENTENG","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"T89V","nama":"NARMADA 2","as":"RSR","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TJYU","nama":"KH AHMAD DAHLAN","as":"ASN","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TIXI","nama":"KH DEWANTARA","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TDPC","nama":"JEMBATAN KEMBAR","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"T5IK","nama":"KURIPAN","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"FWW2","nama":"MUJUR PRAYA TIMUR","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TNPY","nama":"LABUHAN HAJI","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TIL1","nama":"PENUJAK","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TIPA","nama":"LINGSAR","as":"RSR","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TX5F","nama":"UBUNG LOMBOK TENGAH","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"T1LB","nama":"PAOK MOTONG","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"THB9","nama":"KOPANG 2","as":"RSR","am":"IRN","kab":"LOMBOK TENGAH"},{"kode":"T7JP","nama":"PEMEPEK","as":"RSR","am":"IRN","kab":"LOMBOK TENGAH"},{"kode":"TULJ","nama":"TANJUNG","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TIH7","nama":"SAKRA LOMBOK TIMUR","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TIDG","nama":"KERUAK","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TG7G","nama":"M YAMIN 47","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TO6C","nama":"M YAMIN 87","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TAXZ","nama":"CUT NYAK DIEN","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"T0FU","nama":"KELAYU","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TXHR","nama":"MASBAGIK","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TZTD","nama":"WANASABA","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"FGWU","nama":"LABUHAN LOMBOK","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"T9Y8","nama":"SAKRA KOTA","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TS8S","nama":"MENDAGI","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TJAJ","nama":"ABDUL MAJID 03","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TUTT","nama":"KUTA LOMBOK TENGAH","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TKKA","nama":"PRAPEN","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TCEA","nama":"MIDANG","as":"RDH","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"T50A","nama":"FRESH RAYA SENGGIGI","as":"MSI","am":"MYA","kab":"LOMBOK BARAT"},{"kode":"TERC","nama":"MELASE BATU LAYAR","as":"ARF","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"TERT","nama":"A YANI SUMBAWA BARAT","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"T1G1","nama":"PB SUDIRMAN","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"T0Z4","nama":"MALUK SUMBAWA BARAT","as":"MHS","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"TUZ0","nama":"LASAP TALIWANG","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"T2N2","nama":"PARAMPUAN","as":"ASN","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TION","nama":"INDUSTRI","as":"ARF","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TOTL","nama":"AA GEDE NGURAH","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TICI","nama":"RA KARTINI","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TIMS","nama":"AR HAKIM","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TNEO","nama":"LINTAS UTAN","as":"AMR","am":"AMI","kab":"SUMBAWA"},{"kode":"TUG0","nama":"PEKAT SUMBAWA","as":"WRN","am":"MLN","kab":"SUMBAWA"},{"kode":"TALH","nama":"BRANG BIJI","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"TCUQ","nama":"LEMPEH","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"T44M","nama":"VILLA SANDIK","as":"ARF","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"TMSS","nama":"NARMANDA 3","as":"RSR","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TBUX","nama":"CENDRAWASIH 2","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"TOWH","nama":"DIPONEGORO","as":"HAR","am":"MLN","kab":"SUMBAWA"},{"kode":"TRRM","nama":"ENERGI","as":"ARF","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TJJQ","nama":"TGH FAISAL MATARAM","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TTDJ","nama":"APITAIK","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TUKO","nama":"SELAPARANG","as":"ASN","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TOPO","nama":"RAYA TANJUNG","as":"IMS","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"TT6I","nama":"PEJANGGIK 2 LOMBOK TIMUR","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TAGU","nama":"BANJAR GETAS","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TSPP","nama":"RAYA TERARA","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"T0ZI","nama":"KUTA 2","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TW2W","nama":"PEJANGGIK 4 MATARAM","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TRRE","nama":"SULTAN KAHARUDIN 2","as":"HAR","am":"MLN","kab":"SUMBAWA"},{"kode":"TENI","nama":"PENDIDIKAN","as":"AMR","am":"AMI","kab":"SUMBAWA"},{"kode":"TIVY","nama":"MANGGIS 2","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"TODA","nama":"GARUDA 19","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"T22D","nama":"SRIWIJAYA 4","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TUN4","nama":"GARUDA 54","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"T1ON","nama":"RABERAS BUKIT","as":"HAR","am":"MLN","kab":"SUMBAWA"},{"kode":"TNII","nama":"HASANUDIN 2 SUMBAWA BESAR","as":"HAR","am":"MLN","kab":"SUMBAWA"},{"kode":"TMGO","nama":"PRINGGARATA","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TIK4","nama":"A YANI MATARAM","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"T0AK","nama":"MONTONG 2","as":"ARF","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"TJCO","nama":"DIPONEGORO KEKERI","as":"IMS","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"T0IM","nama":"BATUYANG","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TD0A","nama":"CATUR WARGA 3","as":"MSI","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TQES","nama":"RAYA RADEN PUGUH","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TXUX","nama":"JENDRAL SUDIRMAN","as":"IMS","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TULY","nama":"DARMAJI","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TM4M","nama":"KORLEKO","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TUIG","nama":"TGH FAISAL LOMBOK BARAT","as":"IWI","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TON5","nama":"RAYA MONTONG GAMANG","as":"RSR","am":"IRN","kab":"LOMBOK TENGAH"},{"kode":"TIMG","nama":"ABDUL MAJID 100","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TI0X","nama":"KOPANG 3","as":"RSR","am":"IRN","kab":"LOMBOK TENGAH"},{"kode":"TATO","nama":"POINT BANDARA LOMBOK 2","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TAZE","nama":"PARIWISATA 48","as":"ARF","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"TIEO","nama":"WISATA BENANG STOKEL","as":"RSR","am":"IRN","kab":"LOMBOK TENGAH"},{"kode":"TAQE","nama":"RENGSING","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TTAZ","nama":"EMPANG","as":"WRN","am":"MLN","kab":"SUMBAWA"},{"kode":"TA0N","nama":"TGH MANSYUR BAJUR","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TNOB","nama":"GAJAH MADA 89","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TAWG","nama":"RAYA LABUHAN LOMBOK KM 3","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TMAZ","nama":"DAREK LOMBOK TENGAH","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TMOU","nama":"LINGKAR SELATAN","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TEDX","nama":"FRESH BUNG HATTA","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TXXD","nama":"SENGKERANG","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TVAK","nama":"BUNG KARNO 3","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TUFM","nama":"SEMAYAN","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"FOAR","nama":"ADE IRMA","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TAR9","nama":"FRESH BY PASS BILL 4","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TXFB","nama":"UNTUNG SUROPATI","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"FAUB","nama":"SPBU SERUNI","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TIZ0","nama":"RAYA SENGGIGI KM 8","as":"ARF","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"T0VV","nama":"LEMBAR 2","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TN5A","nama":"KUTA 4","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TICG","nama":"MASBAGIK SARU","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TAHZ","nama":"SURALAGA","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TRYY","nama":"RAYA KAWO KM 2","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TKEO","nama":"JATISELA","as":"RDH","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"TIOH","nama":"TANJUNG LUAR","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TOLP","nama":"RAYA BAGIK BONTONG KM 1","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TDAN","nama":"SEGARA ANAK NO.11","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TAXE","nama":"RINJANI KM 1 LTM","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TUIB","nama":"ALAS DALAM","as":"AMR","am":"AMI","kab":"SUMBAWA"},{"kode":"TCRR","nama":"IRENG JAYA KM 2","as":"RDH","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"T144","nama":"RAYA SIKUR","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"T0F1","nama":"BY PASS BILL 468","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"T0IO","nama":"WISATA LEMOR KM 1","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TUD0","nama":"PENEDA GANDOR KM 5","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TIJA","nama":"SOEKARNO HATTA NO 16","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TJJG","nama":"MASBAGIK PRINGGASELA KM 1","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TXXR","nama":"SEMBALUN LAWANG KM 1","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"T11M","nama":"PARIWISATA NO 26 C","as":"ARF","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"TQQK","nama":"BUNG KARNO NO 8","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TEK2","nama":"ALAS BARAT","as":"AMR","am":"AMI","kab":"SUMBAWA"},{"kode":"TAMP","nama":"H. LALU HASYIM","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TEVU","nama":"KARANG DIMA","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"TAZS","nama":"SALEH SUNGKAR NO. 71 C","as":"ARF","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TELS","nama":"TGH LOPAN NO 21","as":"NDA","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TKLE","nama":"PRABU RANGKASARI 3","as":"MSI","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TOYY","nama":"ARYA BANJAR GETAS NO. 105","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TDFF","nama":"RINJANI NO 1","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TEMR","nama":"TGH IBRAHIM AL KHALIDY","as":"SAP","am":"MYA","kab":"LOMBOK BARAT"},{"kode":"TUEK","nama":"BONJERUK","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TI0B","nama":"RAYA KOPANG KM 1","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TUUB","nama":"TGH LOPAN NO 28","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TOOM","nama":"POINT PELABUHAN KAYANGAN","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TLYU","nama":"SETIA BUDI NO 14A","as":"HAR","am":"MLN","kab":"SUMBAWA"},{"kode":"TNNM","nama":"KI HAJAR DEWANTARA NO 40","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TUPG","nama":"PB SUDIRMAN GEGUTU","as":"IMS","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TYOS","nama":"YOS SUDARSO NO. 29","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"THNK","nama":"YOS SUDARSO NO. 90","as":"ARF","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TIOC","nama":"A YANI REVERSIDE NO 7","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TKEX","nama":"ISMAIL MARZUKI NO. 5A","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TDUV","nama":"LINTAS SUMBAWA BIMA KM 30","as":"WRN","am":"MLN","kab":"SUMBAWA"},{"kode":"TNEL","nama":"ISMAIL MARZUKI NO. 5D","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TKHH","nama":"BRAWIJAYA NO 25","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TCAF","nama":"KAMPUNG DALAM","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"TZZB","nama":"PARIWISATA NO. 29","as":"IMS","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"THID","nama":"PANJITILAR NO. 86","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TWEM","nama":"GAJAH MADA NO. 88 X","as":"ASN","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TWGO","nama":"DR SOETOMO NO. 22 BC","as":"IMS","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TTOF","nama":"GORA 1 NO 108","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TNEF","nama":"SRIWIJAYA NO. 8E","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TGRU","nama":"LINTAS SUMBAWA BIMA KM 4","as":"WRN","am":"MLN","kab":"SUMBAWA"},{"kode":"TRIW","nama":"ADI SUCIPTO NO. 7","as":"IMS","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TPID","nama":"RAYA MALUK NO. 143","as":"MHS","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"TERM","nama":"MALUK 2","as":"MHS","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"T19T","nama":"RAYA LABUHA POTO TANO","as":"AMR","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"TAGC","nama":"POINT RS SILOAM","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TGAS","nama":"RAYA SEKOTONG","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"T1L1","nama":"LINTAS SUMBAWA KM 19","as":"AMR","am":"AMI","kab":"SUMBAWA"},{"kode":"TAM0","nama":"TGH FAISAL KM1 MTM","as":"MSI","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TTK0","nama":"LINTAS SUMBAWA KM 7","as":"AMR","am":"AMI","kab":"SUMBAWA"},{"kode":"T2JW","nama":"GARUDA NO. 12","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"T82S","nama":"KERANGKA BAJA NO 6- SBS","as":"HAR","am":"MLN","kab":"SUMBAWA"},{"kode":"T2Z9","nama":"SULTAN KAHARUDIN NO 28 - SBS","as":"WRN","am":"MLN","kab":"SUMBAWA"},{"kode":"TLRM","nama":"PENDIDIKAN NO 127","as":"AMR","am":"AMI","kab":"SUMBAWA"},{"kode":"TQOK","nama":"PRABU RANGKASARI 151","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TYQW","nama":"PONDOK PESANTREN KM 3 - SBR","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"TBMS","nama":"SPBU MANDALIKA","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"FZ7Y","nama":"PEMUDA NO 28 - MTM","as":"RDH","am":"TSA","kab":"KOTA MATARAM"},{"kode":"T6A2","nama":"MONTONG GAMANG GANTI KM 9","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TBGV","nama":"HASANUDIN NO 28 A SBS","as":"HAR","am":"MLN","kab":"SUMBAWA"},{"kode":"T1NL","nama":"RAYA AIK BUKAK KM 1","as":"RSR","am":"IRN","kab":"LOMBOK TENGAH"},{"kode":"TBGF","nama":"BATU HIJAU","as":"MHS","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"T0IA","nama":"LINTAS TALIWANG KM 1","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"TI8R","nama":"POINT BANDARA LOMBOK","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TCFS","nama":"PEJANGGIK NO 2 LOMBOK TIMUR","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"T3WM","nama":"RAYA POHGADING KM 1","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TAQN","nama":"RAYA LABUHAN LOMBOK KM.3","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TRNF","nama":"RAYA JENGGIK KM 34 - LTM","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"FJ09","nama":"TGH ZAINUDDIN ABDUL MAJID","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TYVW","nama":"LABUHAN BALAT KM.2-SBR","as":"MHS","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"T0UY","nama":"PAHLAWAN NO 16 - SBR","as":"MHS","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"T1V3","nama":"PARIWISATA SUELA KETANGGA","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"FAL3","nama":"RAYA ANJANI-LTM","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TUSV","nama":"PENDIDIKAN AIKMEL KM.1A-LTM","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TBG7","nama":"LINTAS SUMBAWA BIMA KM 212 A","as":"HAZ","am":"AMI","kab":"BIMA"},{"kode":"TTLD","nama":"BUKIT PERMAI KM. 2 - SUMBAWA","as":"HAR","am":"MLN","kab":"SUMBAWA"},{"kode":"T5NB","nama":"LINTAS DONGGO KM.1","as":"MYD","am":"MLN","kab":"BIMA"},{"kode":"T9KY","nama":"BUYA HAMKA-BIMA","as":"MYD","am":"MLN","kab":"BIMA"},{"kode":"TWGD","nama":"LINTAS SUMBAWA BIMA KM 215","as":"HAZ","am":"AMI","kab":"BIMA"},{"kode":"T07W","nama":"LINTAS NISA WOHA-BIMA","as":"HAZ","am":"AMI","kab":"BIMA"},{"kode":"TRYF","nama":"HASANUDIN NO.358 -LTM","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TGW2","nama":"AMIR HAMZAH - MTM","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TSY7","nama":"LINTAS TALABIU KM.1-BIMA","as":"MYD","am":"MLN","kab":"BIMA"},{"kode":"TYJP","nama":"I GUSTI JELANTIK GOSA-MTM","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TKUX","nama":"AKSES CIRCUIT MANDALIKA-LTH","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"FCFO","nama":"TGH UMAR-LTM","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TSAF","nama":"LINTAS TENTE GODO-BIMA","as":"HAZ","am":"AMI","kab":"BIMA"},{"kode":"TJC6","nama":"RAYA KUTA LOMBOK-LTH","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TGXA","nama":"LINTAS SUMBAWA KM 216-BIMA","as":"MYD","am":"MLN","kab":"BIMA"},{"kode":"TAUC","nama":"MOYO UTARA - SBS","as":"HAR","am":"MLN","kab":"SUMBAWA"},{"kode":"T3NS","nama":"RAYA SETELUK KM 1-SBR","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"TRF6","nama":"RAYA LANGAM-SBS","as":"WRN","am":"MLN","kab":"SUMBAWA"},{"kode":"TCZ6","nama":"BY PASS BILL VICTORY-LTH","as":"MDN","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"TR1Z","nama":"K.H HASYIM ASYIARI-LTM","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TG00","nama":"MAJAPAHIT RAYA-MTM","as":"ASN","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TVFP","nama":"RAYA SUKAMULIA-LTM","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TATG","nama":"RAYA LABANGKA KM 1 - SBS","as":"WRN","am":"MLN","kab":"SUMBAWA"},{"kode":"TWFM","nama":"KEBAYAN-SBS","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"TI26","nama":"RAYA LANGKO - MTM","as":"IMS","am":"TSA","kab":"KOTA MATARAM"},{"kode":"TVW6","nama":"RAYA TALIWANG NO 5","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"THKD","nama":"RAYA SEKONGKANG NO 13-SBR","as":"MHS","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"T92I","nama":"GATOT SUBROTO SADIA - BIMA","as":"MYD","am":"MLN","kab":"KOTA BIMA"},{"kode":"TQRD","nama":"RAYA GERUNG - LBR","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TYJ4","nama":"BRIGTH BY SPBU L. SELATAN","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TJA7","nama":"SOEKARNO HATTA PARUGA","as":"HAZ","am":"AMI","kab":"KOTA BIMA"},{"kode":"TDI8","nama":"RAYA SETELUK KM.3B-SBR","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"T7AZ","nama":"RE MARTADINATA-BIMA","as":"HAZ","am":"AMI","kab":"KOTA BIMA"},{"kode":"TTPH","nama":"RAYA ANJANI KM 2-LTM","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TCPF","nama":"DATUK DIBANTA-KOTA BIMA","as":"MYD","am":"MLN","kab":"KOTA BIMA"},{"kode":"TGD0","nama":"GAJAH MADA - KOTA BIMA","as":"MYD","am":"MLN","kab":"KOTA BIMA"},{"kode":"TKFX","nama":"TUMPANG SARI - MTM","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TGHM","nama":"WOLTER MONGINSIDI SARAE","as":"HAZ","am":"AMI","kab":"KOTA BIMA"},{"kode":"TLPX","nama":"PENDIDIKAN 101 - LTM","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"T2YZ","nama":"SOEKARNO HATTA PENATOI-BIMA","as":"MYD","am":"MLN","kab":"KOTA BIMA"},{"kode":"TDX3","nama":"BUNDARAN KUTA-LTH","as":"SAP","am":"MYA","kab":"LOMBOK TENGAH"},{"kode":"FYJ5","nama":"BASUKI RAHMAT-LTH","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TB6C","nama":"LINGKAR SELATAN NO 9 X-MTM","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TZNM","nama":"SEGARA ANAK KM.5-LTM","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"T82P","nama":"RAYA UTAN-SBS","as":"AMR","am":"AMI","kab":"SUMBAWA"},{"kode":"TPYZ","nama":"RAYA KERUAK KM.9-LTM","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"T7BO","nama":"RAYA MANGGIS-SBS","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"TZ8H","nama":"RAYA LABUHAN LOMBOK KM.1-LTM","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TOX8","nama":"HOS COKROAMINOTO-LTM","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TWLK","nama":"CENDRAWASIH KM.1-SBS","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"T46M","nama":"RAYA SAMBALIA-LTM","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TJS8","nama":"RAYA SERNU-SBS","as":"JMK","am":"MLN","kab":"SUMBAWA"},{"kode":"T7IY","nama":"RAYA TANJUNG SELONG KM.4-LTM","as":"MZI","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TQDW","nama":"LINTAS SUMBAWA TANO KM.33","as":"AMR","am":"AMI","kab":"SUMBAWA"},{"kode":"TSBP","nama":"BY PASS NIJANG KM.1-SUMBAWA","as":"WRN","am":"MLN","kab":"SUMBAWA"},{"kode":"TMNX","nama":"RAYA MARONGE - SBS","as":"WRN","am":"MLN","kab":"SUMBAWA"},{"kode":"TS2C","nama":"ZAINUDDIN ABDUL MAJID NO 145","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"F9SY","nama":"TGH MOH MUTAWALLI - LTM","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TZLC","nama":"RAYA TANJUNG 2-KLU","as":"MSI","am":"MYA","kab":"LOMBOK UTARA"},{"kode":"TGBB","nama":"SANDUBAYA NO 45-MTM","as":"ASN","am":"IRN","kab":"KOTA MATARAM"},{"kode":"T5ZE","nama":"BANGSAL BARU-KLU","as":"MSI","am":"MYA","kab":"LOMBOK UTARA"},{"kode":"TFDH","nama":"TGH ABDUL MUHIET ELLEFAQY","as":"ASA","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TTG1","nama":"DARUL HIKMAH NO.1 - LBR","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TS1O","nama":"RAYA SEMBALUN-LTM","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TCGE","nama":"RAYA TERARA NO 16-LTM","as":"PAR","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"T9O5","nama":"RAYA TANJUNG KM.9-KLU","as":"MSI","am":"MYA","kab":"LOMBOK UTARA"},{"kode":"TFZB","nama":"BUNG KARNO NO.7 - MTM","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TEZZ","nama":"RAYA KARTINI -SBS","as":"HAR","am":"MLN","kab":"SUMBAWA"},{"kode":"TF3I","nama":"RAYA GONDANG 2 - KLU","as":"IMS","am":"TSA","kab":"LOMBOK UTARA"},{"kode":"TS4B","nama":"MAJAPAHIT KEKALIK NO.83-MTM","as":"HEN","am":"MYA","kab":"KOTA MATARAM"},{"kode":"TS8K","nama":"RAYA BATUNYALA-LTH","as":"HAN","am":"TSA","kab":"LOMBOK TENGAH"},{"kode":"TENW","nama":"BRAWIJAYA NO.99-MTM","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TLCJ","nama":"GUNUNGSARI NO 3-LBR","as":"MSI","am":"MYA","kab":"LOMBOK BARAT"},{"kode":"TKLD","nama":"BAYAN ANYAR-KLU","as":"IMS","am":"TSA","kab":"LOMBOK UTARA"},{"kode":"T4AS","nama":"RAYA PEMENANG-KLU","as":"MSI","am":"MYA","kab":"LOMBOK UTARA"},{"kode":"TRHR","nama":"PANCA USAHA NO 25 -MTM","as":"IWI","am":"IRN","kab":"KOTA MATARAM"},{"kode":"F7FX","nama":"BRIGHT BY IDM BUNG KARNO","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"FXCR","nama":"AHMAD DAHLAN","as":"ASN","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TQ4J","nama":"JENDRAL SUDIRMAN 1","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TH0O","nama":"PARIWISATA TOYA NO 36-LTM","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TAM2","nama":"LINTAS SUMBAWA BIMA KM 5-SBS","as":"WRN","am":"MLN","kab":"SUMBAWA"},{"kode":"TP5Z","nama":"PONDOK PESANTREN MENALA-SBR","as":"MJN","am":"AMI","kab":"SUMBAWA BARAT"},{"kode":"TZMM","nama":"KOPERASI AIKMEL NO 124-LTM","as":"ARD","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"FX3R","nama":"SRIWIJAYA-MTM","as":"ASN","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TEZF","nama":"SULTAN SALAHUDIN NO 9-MTM","as":"ASN","am":"IRN","kab":"KOTA MATARAM"},{"kode":"FBV8","nama":"BRIGHT BY IDM PAGESANGAN","as":"ASN","am":"IRN","kab":"KOTA MATARAM"},{"kode":"FW6I","nama":"RAYA TANJUNG LOMBOK UTARA","as":"RDH","am":"TSA","kab":"LOMBOK UTARA"},{"kode":"T6TT","nama":"RADEN ABDUL RAHMAN-LBR","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"T5Q6","nama":"SONOKELING DASAN GERIA-LBR","as":"IMS","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"T4Y2","nama":"LINTAS SUMBAWA BIMA MANGGALEWA","as":"MYD","am":"MLN","kab":"DOMPU"},{"kode":"T4NF","nama":"LINTAS SUMBAWA BIMA BAKAJAYA","as":"HAZ","am":"AMI","kab":"DOMPU"},{"kode":"TD1F","nama":"KARTINI NO 1-DOMPU","as":"MYD","am":"MLN","kab":"DOMPU"},{"kode":"T4EX","nama":"GORA 2 PETELUAN INDAH-LBR","as":"RSR","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TFID","nama":"RAYA SENGGIGI MENINTING - LBR","as":"IMS","am":"TSA","kab":"LOMBOK BARAT"},{"kode":"FMUJ","nama":"RSUP PRABU RANGKASARI","as":"DMJ","am":"IRN","kab":"KOTA MATARAM"},{"kode":"TFD7","nama":"RAYA MANTANG AIK DAREK-LTH","as":"RSR","am":"IRN","kab":"LOMBOK TENGAH"},{"kode":"TCNO","nama":"LINTAS LAKEY HU","as":"HAZ","am":"AMI","kab":"DOMPU"},{"kode":"TS5R","nama":"H. LALU ANANG WARINGIN - LTM","as":"LZH","am":"EWY","kab":"LOMBOK TIMUR"},{"kode":"TDL3","nama":"DARUL HIKMAH NO 10 - LBR","as":"NDA","am":"IRN","kab":"LOMBOK BARAT"},{"kode":"TNOT","nama":"PELABUHAN SAPE-BIMA","as":"MYD","am":"MLN","kab":"BIMA"},{"kode":"T5OM","nama":"RAYA BENGKEL MEREMBU NO 49 - LBR","as":"-","am":"-","kab":"LOMBOK BARAT"},{"kode":"TYD4","nama":"PAHLAWAN ALAS DALAM - SBS","as":"AMR","am":"AMI","kab":"SUMBAWA"}];
 let STORES = DEFAULT_STORES.slice();
